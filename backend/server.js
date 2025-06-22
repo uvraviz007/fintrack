@@ -3,7 +3,7 @@ const app = express();
 const db = require('./db');
 const {connectDB} = require('./db');
 require('dotenv').config();
-// const userRoutes = require('./routes/user.route.js');
+const userRoutes = require('./routes/user.route.js');
 // const candidateRoutes = require('./routes/candidate.route.js');
 // const cors = require('cors'); 
 
@@ -19,7 +19,7 @@ app.use(bodyParser.json()); // req.body
 const PORT =  5001;
 
 
-// app.use('/user', userRoutes);
+app.use('/user', userRoutes);
 // app.use('/candidate', candidateRoutes);
 
 
