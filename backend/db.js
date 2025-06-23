@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 // Define the MongoDB connection URL with fallback
-const mongoURL = 'mongodb://localhost:27017/';
+const mongoURL = "mongodb+srv://uvraviz26:9026678700@cluster0.zpzfftb.mongodb.net/";
 
 // Set up MongoDB connection with proper options
 const connectDB = async () => {

@@ -12,7 +12,7 @@ router.post('/create', jwtAuthMiddleware, async (req, res) => {
   try {
     const { name, members } = req.body;
 
-    const userId = req.user._id; // this comes from jwtAuthMiddleware
+    const userId = req.user.id; // this comes from jwtAuthMiddleware
 
     // Ensure the creator is part of the group
     const uniqueMembers = new Set([...members, userId.toString()]);
