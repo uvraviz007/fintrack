@@ -1,0 +1,9 @@
+for group
+{
+   post- /group/create     
+   put -/group/:groupId/add-members
+   get- /group/:groupId/members
+   get - /group/:groupId
+
+
+}
