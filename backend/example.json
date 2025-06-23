@@ -4,4 +4,39 @@
   "email": "ravi@example.com",
   "mobile": 9876543210,
   "password": "qwerty"
+},
+
+//expense  model example
+{
+  "group": "667b1d123abc45678def0123",
+  "description": "Dinner at Biryani House",
+  "amount": 900,
+  "paidBy": "667b2c98abc12345def01234",
+  "splitBetween": [
+    "667b2c98abc12345def01234", // Ravi
+    "667b2d09abc12345def01235", // Devanshi
+    "667b2d1eabc12345def01236"  // Aman
+  ],
+  "splitAmount": {
+    "667b2c98abc12345def01234": 300,
+    "667b2d09abc12345def01235": 300,
+    "667b2d1eabc12345def01236": 300
+  }
+}
+
+
+//gropu schema
+{
+  "_id": "667c1d123abc45678def0123",
+  "name": "Goa Trip",
+  "members": [
+    "667b2c98abc12345def01234",
+    "667b2d09abc12345def01235",
+    "667b2d1eabc12345def01236"
+  ],
+  "expenses": [
+    "668a5f91d342fa7e45e9a99b"
+  ],
+  "createdBy": "667b2c98abc12345def01234",
+  "createdAt": "2025-06-22T16:00:00Z"
 }

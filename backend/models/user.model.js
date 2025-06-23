@@ -10,7 +10,6 @@ const  userSchema=new mongoose.Schema({
         type:String,
         unique:true,
         required:true
-
     },
     email:{
          type:String,
@@ -21,13 +20,18 @@ const  userSchema=new mongoose.Schema({
         required:true,
         unique:true
     },
-
     password:{
         type:String,
         required:true
     },
+    groups: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Group'
+  }]
+   },
+ {
+  timestamps: true
 });
-
 
 //this functionality is to hash the password
 userSchema.pre('save', async function(next){

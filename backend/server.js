@@ -4,6 +4,7 @@ const db = require('./db');
 const {connectDB} = require('./db');
 require('dotenv').config();
 const userRoutes = require('./routes/user.route.js');
+const groupRoutes = require('./routes/group.route.js');
 // const candidateRoutes = require('./routes/candidate.route.js');
 // const cors = require('cors'); 
 
@@ -20,6 +21,7 @@ const PORT =  5001;
 
 
 app.use('/user', userRoutes);
+app.use('/group', groupRoutes);
 // app.use('/candidate', candidateRoutes);
 
 
