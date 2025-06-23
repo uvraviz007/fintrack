@@ -1,6 +1,7 @@
 const express = require('express')
 const router =express.Router();
 const Group=require('./../models/group.model');
+const Expense=require('./../models/expense.model');
 
 const {jwtAuthMiddleware,generateToken}=require('./../jwt');
 
@@ -40,7 +41,7 @@ router.put('/:groupId/add-members', jwtAuthMiddleware, async (req, res) => {
   try {
     const groupId = req.params.groupId;
     const { newMembers } = req.body;
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     if (!Array.isArray(newMembers) || newMembers.length === 0) {
       return res.status(400).json({ error: 'newMembers must be a non-empty array' });
@@ -57,8 +58,10 @@ router.put('/:groupId/add-members', jwtAuthMiddleware, async (req, res) => {
     }
 
     // Merge old and new members without duplicates
-    const updatedMembers = new Set([...group.members.map(id => id.toString()), ...newMembers.map(id => id.toString())]);
-    group.members = Array.from(updatedMembers);
+    const updatedMembers = new Set([
+  ...group.members.filter(Boolean).map(id => id.toString()),
+  ...newMembers.filter(Boolean).map(id => id.toString())
+]);
 
     const updatedGroup = await group.save();
 
