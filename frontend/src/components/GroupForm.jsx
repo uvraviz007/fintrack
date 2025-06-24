@@ -23,25 +23,25 @@ function GroupForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md w-96">
-      <h2 className="text-2xl font-bold text-center mb-6">Create Group</h2>
+    <form onSubmit={handleSubmit} className="bg-white p-3 rounded-lg shadow-lg w-72 mt-4 mx-auto border border-gray-300">
+      <h2 className="text-lg font-bold text-center mb-3 text-gray-800">Create Group</h2>
       <input
         type="text"
         placeholder="Group Name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-2 py-2 mb-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
       <input
         type="text"
         placeholder="Member Emails (comma-separated)"
         value={members}
         onChange={(e) => setMembers(e.target.value)}
-        className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-2 py-2 mb-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
       <button
         type="submit"
-        className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
+        className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-300"
       >
         Create Group
       </button>
