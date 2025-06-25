@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 function Signup() {
   const [name, setName] = useState('');
+  const [username, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -30,6 +31,13 @@ function Signup() {
             placeholder="Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+          <input
+            type="text"
+            placeholder="User Name"
+            value={username}
+            onChange={(e) => setUserName(e.target.value)}
             className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           />
           <input
