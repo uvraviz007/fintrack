@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-r from-orange-400 via-pink-500 to-red-500 flex flex-col items-center justify-center text-white">
+    <div className="min-h-screen bg-gradient-to-r from-gray-600 via-gray-400 to-gray-500 flex flex-col items-center justify-center text-white">
       <div className="text-center">
         <h1 className="text-6xl font-extrabold mb-6 drop-shadow-lg">
           Welcome to <span className="text-yellow-300">Bill Splitter</span>

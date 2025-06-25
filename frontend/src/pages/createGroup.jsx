@@ -52,7 +52,7 @@ const CreateGroup = () => {
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-r from-gray-700 via-gray-300 to-gray-400 p-8 text-gray-800 flex">
         {/* Create Group Section */}
-        <div className="w-1/3 bg-white rounded-lg shadow-xl p-6 text-gray-800 mr-4 ml-20 border-2 border-blue-600">
+        <div className="w-1/3 h-1/2 bg-white rounded-lg shadow-xl p-6 text-gray-800 mr-4 ml-20 border-2 border-blue-600">
           <h2 className="text-2xl font-bold mb-4 text-blue-600">Create Group</h2>
           <form onSubmit={handleCreateGroup} className="space-y-4">
             <input
@@ -90,7 +90,7 @@ const CreateGroup = () => {
         </div>
 
         {/* Add Members to Existing Group Section */}
-        <div className="w-1/3 bg-white rounded-lg shadow-xl p-6 text-gray-800 ml-20 mr-20 border-2 border-green-600">
+        <div className="w-1/3 h-1/2 bg-white rounded-lg shadow-xl p-6 text-gray-800 ml-20 mr-20 border-2 border-green-600">
           <h2 className="text-2xl font-bold mb-4 text-green-600">Add Members to Existing Group</h2>
           <form onSubmit={handleAddMembersToGroup} className="space-y-4">
             <input

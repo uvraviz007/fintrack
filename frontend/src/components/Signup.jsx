@@ -14,7 +14,7 @@ function Signup() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-r from-gray-600 via-gray-400 to-gray-500 flex items-center justify-center">
       <div className="border-2 border-gray-700 rounded-lg shadow-2xl bg-white ">
         <form
           onSubmit={handleSubmit}

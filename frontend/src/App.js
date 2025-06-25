@@ -6,6 +6,8 @@ import Dashboard from './components/Dashboard';
 import Home from './pages/Home';
 import CreateGroup from './pages/createGroup';
 import Expense from './pages/Expense';
+import Reports from './pages/Reports';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/creategroup" element={<CreateGroup/>}/>
         <Route path="/expense" element={<Expense/>}/>
+        <Route path="/reports" element={<Reports/>}/>
+        <Route path="/profile" element={<Profile/>}/>
       </Routes>
     </Router>
   );

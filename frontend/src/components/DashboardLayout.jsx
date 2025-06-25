@@ -27,6 +27,13 @@ function DashboardLayout({ children }) {
           >
             Expenses
           </li>
+          <li
+            className="cursor-pointer hover:underline"
+            onClick={() => navigate('/reports')}
+          >
+            Reports
+          </li>
+          
         </ul>
       </div>
 
