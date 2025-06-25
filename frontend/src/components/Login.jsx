@@ -12,7 +12,7 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-violet-500 to-red-400 flex items-center justify-center">
+    <div className="min-h-screen  flex items-center justify-center bg-gradient-to-r from-violet-500 to-red-400">
       <div className="border-2 border-gray-700 rounded-lg shadow-xl bg-white">
         <form
           onSubmit={handleSubmit}
