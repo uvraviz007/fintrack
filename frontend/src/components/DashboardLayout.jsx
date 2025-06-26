@@ -17,7 +17,7 @@ function DashboardLayout({ children }) {
           </li>
           <li
             className="cursor-pointer hover:underline"
-            onClick={() => navigate('/creategroup')}
+            onClick={() => navigate('/groups')}
           >
             Groups
           </li>

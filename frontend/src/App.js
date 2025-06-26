@@ -8,6 +8,7 @@ import CreateGroup from './pages/createGroup';
 import Expense from './pages/Expense';
 import Reports from './pages/Reports';
 import Profile from './pages/Profile';
+import Groups from './pages/Groups';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/expense" element={<Expense/>}/>
         <Route path="/reports" element={<Reports/>}/>
         <Route path="/profile" element={<Profile/>}/>
+        <Route path="/groups" element={<Groups/>}/>
       </Routes>
     </Router>
   );
