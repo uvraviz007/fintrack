@@ -5,6 +5,7 @@ const {connectDB} = require('./db');
 require('dotenv').config();
 const userRoutes = require('./routes/user.route.js');
 const groupRoutes = require('./routes/group.route.js');
+const expenseRoutes = require('./routes/expense.route.js');
 
 
 
@@ -18,6 +19,7 @@ const PORT =  5001;
 
 app.use('/user', userRoutes);
 app.use('/group', groupRoutes);
+app.use('/expense', expenseRoutes);
 
 
 
