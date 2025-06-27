@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import api from '../api';
 
 function Profile() {
@@ -8,94 +7,63 @@ function Profile() {
     name: '',
     username: '',
     email: '',
-    phone: '',
+    mobile: '',
   });
 
-  const [editMode, setEditMode] = useState(false);
   const [updatedDetails, setUpdatedDetails] = useState(userDetails);
-  const [usernameAvailable, setUsernameAvailable] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserDetails = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          console.error('No token found. Please log in.');
-          return;
-        }
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
 
+      try {
         const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         };
 
-        const response = await axios.get('/user/profile', config);
-        setUserDetails(response.data);
-        setUpdatedDetails(response.data);
+        const response = await api.get('/user/profile', config);
+        console.log('Fetched user:', response.data.user);
+
+        setUserDetails(response.data.user);
+        setUpdatedDetails(response.data.user);
+        setLoading(false);
       } catch (error) {
-        console.error('Error fetching user details:', error);
+        console.error('Error fetching user details:', error.response || error);
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          navigate('/login');
+        }
       }
     };
 
     fetchUserDetails();
-  }, []);
+  }, [navigate]);
 
-  const handleEditToggle = () => {
-    setEditMode(!editMode);
-  };
+  const handleEditToggle = () => setEditMode(!editMode);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUpdatedDetails({ ...updatedDetails, [name]: value });
-
-    if (name === 'username') {
-      checkUsernameAvailability(value);
-    }
   };
 
-  const checkUsernameAvailability = async (username) => {
+  const handleSaveChanges = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token) return;
+
       const config = {
         headers: { Authorization: `Bearer ${token}` },
       };
 
-      const response = await axios.get(`/user/check-username?username=${username}`, config);
-
-      if (username === userDetails.username) {
-        setUsernameAvailable(true);
-      } else {
-        setUsernameAvailable(response.data.available);
-      }
-    } catch (error) {
-      console.error('Error checking username availability:', error);
-      setUsernameAvailable(true);
-    }
-  };
-
-  const handleSaveChanges = async () => {
-    if (!usernameAvailable) {
-      alert('Username is not available. Please choose a different username.');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No token found. Please log in.');
-        return;
-      }
-
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      await axios.put('/user/profile', updatedDetails, config);
+      await api.put('/user/profile', updatedDetails, config);
       setUserDetails(updatedDetails);
       setEditMode(false);
       alert('Profile updated successfully!');
@@ -110,6 +78,14 @@ function Profile() {
     navigate('/login');
   };
 
+  if (loading || !userDetails) {
+    return (
+      <div className="min-h-screen flex justify-center items-center bg-gray-100 text-xl">
+        Loading profile...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-gray-600 via-gray-400 to-gray-500 flex justify-center items-center relative">
       <div className="bg-white rounded-lg shadow-lg p-8 text-gray-800 w-full max-w-2xl relative">
@@ -122,7 +98,7 @@ function Profile() {
           Logout
         </button>
 
-        {/* Cross Button */}
+        {/* Close Button */}
         <button
           onClick={() => navigate('/dashboard')}
           className="absolute top-4 right-4 px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition duration-300"
@@ -137,7 +113,7 @@ function Profile() {
             <div className="mb-4"><p className="text-lg"><strong>Username:</strong> {userDetails.username}</p></div>
             <div className="mb-4"><p className="text-lg"><strong>Name:</strong> {userDetails.name}</p></div>
             <div className="mb-4"><p className="text-lg"><strong>Email:</strong> {userDetails.email}</p></div>
-            <div className="mb-4"><p className="text-lg"><strong>Phone:</strong> {userDetails.phone}</p></div>
+            <div className="mb-4"><p className="text-lg"><strong>Mobile:</strong> {userDetails.mobile}</p></div>
             <div className="flex justify-end">
               <button
                 onClick={handleEditToggle}
@@ -156,14 +132,10 @@ function Profile() {
                 name="username"
                 value={updatedDetails.username}
                 onChange={handleInputChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-                  usernameAvailable ? 'focus:ring-blue-600' : 'focus:ring-red-600'
-                } text-black`}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-black"
               />
-              {!usernameAvailable && (
-                <p className="text-red-600 text-sm mt-1">Username is not available.</p>
-              )}
             </div>
+
             <div className="mb-4">
               <label className="block text-lg font-semibold mb-2 text-blue-600">Name</label>
               <input
@@ -174,6 +146,7 @@ function Profile() {
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-black"
               />
             </div>
+
             <div className="mb-4">
               <label className="block text-lg font-semibold mb-2 text-blue-600">Email</label>
               <input
@@ -184,16 +157,18 @@ function Profile() {
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-black"
               />
             </div>
+
             <div className="mb-4">
-              <label className="block text-lg font-semibold mb-2 text-blue-600">Phone</label>
+              <label className="block text-lg font-semibold mb-2 text-blue-600">Mobile</label>
               <input
                 type="text"
-                name="phone"
-                value={updatedDetails.phone}
+                name="mobile"
+                value={updatedDetails.mobile}
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-black"
               />
             </div>
+
             <div className="flex justify-between">
               <button
                 onClick={handleSaveChanges}
