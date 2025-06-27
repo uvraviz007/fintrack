@@ -10,6 +10,7 @@ import Reports from './pages/Reports';
 import Profile from './pages/Profile';
 import Groups from './pages/Groups';
 import GroupDetails from './pages/GroupDetails';
+import SettleUp from './pages/SettleUp';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/profile" element={<Profile/>}/>
         <Route path="/groups" element={<Groups/>}/>
         <Route path="/groupdetails/:groupId" element={<GroupDetails/>}/>
+        <Route path="/settleup" element={<SettleUp/>}/>
       </Routes>
     </Router>
   );
