@@ -10,27 +10,23 @@ const Groups = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          console.error('No token found. Please log in.');
-          return;
-        }
-
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        };
-
-        const response = await axios.get('/groups', config);
-        setGroups(response.data);
+        // Example data for now; replace with API call later
+        const exampleGroups = [
+          { id: '1', name: 'Group A', members: ['Alice', 'Bob', 'Charlie'] },
+          { id: '2', name: 'Group B', members: ['David', 'Eve', 'Frank'] },
+        ];
+        setGroups(exampleGroups);
       } catch (error) {
         console.error('Error fetching groups:', error);
       }
     };
-
+  
     fetchGroups();
   }, []);
+
+  const handleGroupClick = (groupId) => {
+    navigate(`/groupdetails/${groupId}`);
+  };
 
   return (
     <DashboardLayout>
@@ -51,15 +47,16 @@ const Groups = () => {
 
         {/* Your Groups Section */}
         <div>
-          <h2 className="text-3xl font-bold text-gray-600 mb-6 text-center ">Your Groups</h2>
+          <h2 className="text-3xl font-bold text-gray-600 mb-6 text-center">Your Groups</h2>
           {groups.length === 0 ? (
             <p className="text-gray-500 text-center">You are not part of any groups yet.</p>
           ) : (
             <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {groups.map((group, index) => (
+              {groups.map((group) => (
                 <li
-                  key={index}
-                  className="bg-white rounded-lg shadow-lg p-6 text-gray-800 hover:shadow-xl transition duration-300"
+                  key={group.id}
+                  className="bg-white rounded-lg shadow-lg p-6 text-gray-800 hover:shadow-xl transition duration-300 cursor-pointer"
+                  onClick={() => handleGroupClick(group.id)}
                 >
                   <h3 className="text-xl font-semibold text-blue-600 mb-2">{group.name}</h3>
                   <p className="text-gray-600 mb-1"><strong>Group ID:</strong> {group.id}</p>

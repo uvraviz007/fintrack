@@ -9,6 +9,7 @@ import Expense from './pages/Expense';
 import Reports from './pages/Reports';
 import Profile from './pages/Profile';
 import Groups from './pages/Groups';
+import GroupDetails from './pages/GroupDetails';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/reports" element={<Reports/>}/>
         <Route path="/profile" element={<Profile/>}/>
         <Route path="/groups" element={<Groups/>}/>
+        <Route path="/groupdetails/:groupId" element={<GroupDetails/>}/>
       </Routes>
     </Router>
   );
