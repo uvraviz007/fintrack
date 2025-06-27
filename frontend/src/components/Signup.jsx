@@ -1,16 +1,39 @@
 import React, { useState } from 'react';
+import api from '../api';
+import { useNavigate } from 'react-router-dom';
 
 function Signup() {
   const [name, setName] = useState('');
   const [username, setUserName] = useState('');
   const [email, setEmail] = useState('');
+  const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await api.post('/user/signup', {
+        name,
+        username,
+        email,
+        mobile,     // ✅ include mobile number
+        password
+      });
+
+      alert('Signup successful!');
+      navigate('/login');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Signup failed. Try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,7 +58,7 @@ function Signup() {
           />
           <input
             type="text"
-            placeholder="User Name"
+            placeholder="Username"
             value={username}
             onChange={(e) => setUserName(e.target.value)}
             className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -45,6 +68,13 @@ function Signup() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
+          <input
+            type="tel"
+            placeholder="Mobile Number"
+            value={mobile}
+            onChange={(e) => setMobile(e.target.value)}
             className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           />
           <input
