@@ -79,6 +79,54 @@ router.delete('/:expenseId', jwtAuthMiddleware, async (req, res) => {
   }
 });
 
+
+//update expeses
+router.put('/update/:expenseId', jwtAuthMiddleware, async (req, res) => {
+  try {
+    const { expenseId } = req.params;
+    const { description, amount, paidBy, splitBetween } = req.body;
+
+    // Validate input
+    if (!description || !amount || !paidBy || !splitBetween || splitBetween.length === 0) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Find the existing expense
+    const expense = await Expense.findById(expenseId);
+    if (!expense) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    // Fetch the group linked to this expense
+    const group = await Group.findById(expense.group);
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    // Ensure all users in splitBetween and paidBy are part of the group
+    const allUsersValid = splitBetween.every(userId => group.members.includes(userId));
+    if (!allUsersValid || !group.members.includes(paidBy)) {
+      return res.status(400).json({ message: 'All users must be part of the group' });
+    }
+
+    // Update fields
+    expense.description = description;
+    expense.amount = amount;
+    expense.paidBy = paidBy;
+    expense.splitBetween = splitBetween;
+
+    await expense.save();
+
+    res.status(200).json({ message: 'Expense updated successfully', expense });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
 module.exports = router;
 
 
