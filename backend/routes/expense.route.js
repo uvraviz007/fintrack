@@ -4,12 +4,11 @@ const Group = require('./../models/group.model');
 const Expense = require('./../models/expense.model');
 const { jwtAuthMiddleware } = require('./../jwt');
 
-const express = require('express');
-const router = express.Router();
-const Group = require('./../models/group.model');
-const Expense = require('./../models/expense.model');
-const { jwtAuthMiddleware } = require('./../jwt');
 
+
+
+
+//adding the expense
 router.post('/add', jwtAuthMiddleware, async (req, res) => {
   try {
     const { group: groupName, description, amount, paidBy, splitBetween } = req.body;
@@ -52,7 +51,35 @@ router.post('/add', jwtAuthMiddleware, async (req, res) => {
   }
 });
 
+
+
+//deleting the expense
+router.delete('/:expenseId', jwtAuthMiddleware, async (req, res) => {
+  try {
+    const { expenseId } = req.params;
+
+    // 1. Find & delete the expense
+    const expense = await Expense.findByIdAndDelete(expenseId);
+    if (!expense) {
+      return res.status(404).json({ message: 'Expense not found' });
+    }
+
+    // 2. Remove the expense reference from its group
+    await Group.findByIdAndUpdate(
+      expense.group,            // this is the ObjectId ref in the expense doc
+      { $pull: { expenses: expense._id } }
+    );
+
+    // (Optional) 3. If you have any per-user balance tracking, you could adjust balances here.
+
+    res.status(200).json({ message: 'Expense deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
 
 
-module.exports = router;
+
