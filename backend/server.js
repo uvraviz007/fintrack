@@ -1,32 +1,38 @@
-const express = require('express')
+const express = require('express');
 const app = express();
-const db = require('./db');
-const {connectDB} = require('./db');
 require('dotenv').config();
+
+const { connectDB } = require('./db');
 const userRoutes = require('./routes/user.route.js');
 const groupRoutes = require('./routes/group.route.js');
 const expenseRoutes = require('./routes/expense.route.js');
 
+const cors = require('cors');
+const bodyParser = require('body-parser');
 
-
+// ✅ 1. Connect to MongoDB
 connectDB();
 
+// ✅ 2. Middleware
+app.use(cors({
+  origin: 'http://localhost:3000', // your frontend origin
+  credentials: true
+}));
 
-const bodyParser = require('body-parser'); 
-app.use(bodyParser.json()); // req.body
-const PORT =  5001;
+app.use(bodyParser.json()); // For parsing application/json
 
-
+// ✅ 3. Routes
 app.use('/user', userRoutes);
 app.use('/group', groupRoutes);
 app.use('/expense', expenseRoutes);
 
-
-
-app.get('/', (req,res)=>{
-    res.send("hello lets work on the project");
+// ✅ 4. Default route
+app.get('/', (req, res) => {
+  res.send("Hello! Backend is running and connected.");
 });
 
-app.listen(PORT, ()=>{
-    console.log('listening on port', PORT);
-})
+// ✅ 5. Start server
+const PORT = 5001;
+app.listen(PORT, () => {
+  console.log(`✅ Server is listening on http://localhost:${PORT}`);
+});
