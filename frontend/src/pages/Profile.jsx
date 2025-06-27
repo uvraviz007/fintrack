@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
-import axios from '../utils/api';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import api from '../api';
 
 function Profile() {
   const [userDetails, setUserDetails] = useState({
-    username: '',
     name: '',
+    username: '',
     email: '',
     phone: '',
-    address: '',
   });
 
   const [editMode, setEditMode] = useState(false);
   const [updatedDetails, setUpdatedDetails] = useState(userDetails);
   const [usernameAvailable, setUsernameAvailable] = useState(true);
 
-  const navigate = useNavigate(); // Initialize useNavigate for navigation
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -50,14 +50,29 @@ function Profile() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUpdatedDetails({ ...updatedDetails, [name]: value });
+
+    if (name === 'username') {
+      checkUsernameAvailability(value);
+    }
   };
 
   const checkUsernameAvailability = async (username) => {
     try {
-      const response = await axios.get(`/user/check-username?username=${username}`);
-      setUsernameAvailable(response.data.available);
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+
+      const response = await axios.get(`/user/check-username?username=${username}`, config);
+
+      if (username === userDetails.username) {
+        setUsernameAvailable(true);
+      } else {
+        setUsernameAvailable(response.data.available);
+      }
     } catch (error) {
       console.error('Error checking username availability:', error);
+      setUsernameAvailable(true);
     }
   };
 
@@ -90,46 +105,39 @@ function Profile() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-gray-600 via-gray-400 to-gray-500 flex justify-center items-center relative">
-      {/* Profile Content */}
       <div className="bg-white rounded-lg shadow-lg p-8 text-gray-800 w-full max-w-2xl relative">
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="absolute top-4 left-4 px-4 py-2 bg-yellow-600 text-white rounded-full hover:bg-yellow-700 transition duration-300"
+        >
+          Logout
+        </button>
+
         {/* Cross Button */}
         <button
-          onClick={() => navigate('/dashboard')} // Navigate back to Home/Dashboard
+          onClick={() => navigate('/dashboard')}
           className="absolute top-4 right-4 px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition duration-300"
         >
           ✕
         </button>
 
         <h1 className="text-4xl font-bold mb-6 text-center text-blue-600 underline">Profile</h1>
+
         {!editMode ? (
           <div>
-            <div className="mb-4">
-              <p className="text-lg">
-                <strong>Username:</strong> {userDetails.username}
-              </p>
-            </div>
-            <div className="mb-4">
-              <p className="text-lg">
-                <strong>Name:</strong> {userDetails.name}
-              </p>
-            </div>
-            <div className="mb-4">
-              <p className="text-lg">
-                <strong>Email:</strong> {userDetails.email}
-              </p>
-            </div>
-            <div className="mb-4">
-              <p className="text-lg">
-                <strong>Phone:</strong> {userDetails.phone}
-              </p>
-            </div>
-            <div className="mb-4">
-              <p className="text-lg">
-                <strong>Address:</strong> {userDetails.address}
-              </p>
-            </div>
+            <div className="mb-4"><p className="text-lg"><strong>Username:</strong> {userDetails.username}</p></div>
+            <div className="mb-4"><p className="text-lg"><strong>Name:</strong> {userDetails.name}</p></div>
+            <div className="mb-4"><p className="text-lg"><strong>Email:</strong> {userDetails.email}</p></div>
+            <div className="mb-4"><p className="text-lg"><strong>Phone:</strong> {userDetails.phone}</p></div>
             <div className="flex justify-end">
               <button
                 onClick={handleEditToggle}
@@ -147,10 +155,7 @@ function Profile() {
                 type="text"
                 name="username"
                 value={updatedDetails.username}
-                onChange={(e) => {
-                  handleInputChange(e);
-                  checkUsernameAvailability(e.target.value);
-                }}
+                onChange={handleInputChange}
                 className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
                   usernameAvailable ? 'focus:ring-blue-600' : 'focus:ring-red-600'
                 } text-black`}
@@ -188,15 +193,6 @@ function Profile() {
                 onChange={handleInputChange}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-black"
               />
-            </div>
-            <div className="mb-4">
-              <label className="block text-lg font-semibold mb-2 text-blue-600">Address</label>
-              <textarea
-                name="address"
-                value={updatedDetails.address}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 text-black"
-              ></textarea>
             </div>
             <div className="flex justify-between">
               <button
