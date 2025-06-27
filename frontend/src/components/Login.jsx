@@ -1,36 +1,35 @@
 import React, { useState } from 'react';
+import api from '../api';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
-  const [emailOrUsername, setEmailOrUsername] = useState(''); // Combined field for email or username
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
+
     try {
-      // Logic to handle login with either email or username
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          emailOrUsername, // Send email or username to the backend
-          password,
-        }),
+      const response = await api.post('/user/login', {
+        username,
+        password
       });
 
-      const data = await response.json();
-      if (response.ok) {
-        console.log('Login successful:', data);
-        setError('');
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        alert('Login successful!');
+        navigate('/dashboard');
       } else {
-        setError(data.message || 'Login failed. Please try again.');
+        setError('Invalid credentials');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -44,12 +43,12 @@ function Login() {
           className="bg-white p-8 rounded-lg shadow-lg w-96 border border-gray-300"
         >
           <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">Login</h2>
-          
+
           <input
             type="text"
-            placeholder="Email or Username"
-            value={emailOrUsername}
-            onChange={(e) => setEmailOrUsername(e.target.value)}
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <input
@@ -59,7 +58,9 @@ function Login() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+
           {error && <p className="text-red-500 mb-4">{error}</p>}
+
           <button
             type="submit"
             disabled={loading}
