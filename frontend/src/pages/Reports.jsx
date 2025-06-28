@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bar, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import { saveAs } from 'file-saver';
-import axios from '../utils/api';
+import axios from 'axios';
 import DashboardLayout from '../components/DashboardLayout';
 
 // Register Chart.js components

@@ -7,7 +7,6 @@ const GroupDetails = () => {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const [newMember, setNewMember] = useState('');
-  const [removeMember, setRemoveMember] = useState('');
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [expenseData, setExpenseData] = useState({
     amount: '',
@@ -76,11 +75,6 @@ const GroupDetails = () => {
 
 
 
-  const handleRemoveMember = () => {
-    alert(`Member "${removeMember}" removed from group ${groupId}`);
-    setRemoveMember('');
-  };
-
   const handleSettleUp = () => {
     navigate(`/settleup/${groupId}`);
   };
@@ -130,22 +124,115 @@ const GroupDetails = () => {
               Add Member
             </button>
           </div>
-          <div className="flex items-center space-x-4">
-            <input
-              type="text"
-              placeholder="Remove Member"
-              value={removeMember}
-              onChange={(e) => setRemoveMember(e.target.value)}
-              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 text-black"
-            />
-            <button
-              onClick={handleRemoveMember}
-              className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-300"
-            >
-              Remove Member
-            </button>
-          </div>
         </div>
+
+
+        <hr className='border-gray-400 mb-4'></hr>
+
+         {/* Settle Up and Add Expense Buttons */}
+         <div className="flex justify-between items-center mb-4">
+          <button
+            onClick={() => navigate('/settleup')}
+            className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition duration-300 shadow-lg"
+          >
+            Settle Up
+          </button>
+          <button
+            onClick={handleAddExpense}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 shadow-lg"
+          >
+            Add Expense
+          </button>
+        </div>
+        <hr className="border-gray-400 mb-12" />
+        {/* Expense Form */}
+        {showExpenseForm && (
+            <form onSubmit={handleExpenseFormSubmit} className="bg-white rounded-lg shadow-lg p-6 mb-6 relative">
+                {/* Close Button */}
+                <button
+                type="button"
+                onClick={() => setShowExpenseForm(false)}
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 transition duration-300"
+                >
+                ✖
+                </button>
+                <h3 className="text-xl font-bold text-gray-700 mb-4">Add Expense</h3>
+                <div className="space-y-4">
+                <input
+                    type="number"
+                    placeholder="Amount"
+                    value={expenseData.amount}
+                    onChange={(e) => setExpenseData({ ...expenseData, amount: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+                <input
+                    type="text"
+                    placeholder="Description"
+                    value={expenseData.description}
+                    onChange={(e) => setExpenseData({ ...expenseData, description: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+                <input
+                    type="text"
+                    placeholder="Category"
+                    value={expenseData.category}
+                    onChange={(e) => setExpenseData({ ...expenseData, category: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+                <input
+                    type="text"
+                    placeholder="Paid By"
+                    value={expenseData.paidBy}
+                    onChange={(e) => setExpenseData({ ...expenseData, paidBy: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+                <input
+                    type="date"
+                    value={expenseData.date}
+                    onChange={(e) => setExpenseData({ ...expenseData, date: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+                <input
+                    type="time"
+                    value={expenseData.time}
+                    onChange={(e) => setExpenseData({ ...expenseData, time: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+                </div>
+                <button
+                type="submit"
+                className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-300"
+                >
+                Submit Expense
+                </button>
+            </form>
+        )}
+
+        {/* Expenses Section */}
+        {groupExpenses.length === 0 ? (
+          <p className="text-gray-500 text-lg text-center">No expenses found for this group.</p>
+        ) : (
+          <ul className="space-y-2">
+            {groupExpenses.map((expense) => (
+              <li
+                key={expense.id}
+                className="bg-white rounded-lg shadow-md p-3 text-gray-800 hover:shadow-lg transition duration-300 border border-gray-300"
+              >
+               <h3 className="text-lg font-semibold text-blue-600 mb-1">{expense.description}</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <p className="text-gray-600 text-sm"><strong>Amount:</strong> ₹{expense.amount}</p>
+                  <p className="text-gray-600 text-sm"><strong>Category:</strong> {expense.category}</p>
+                  <p className="text-gray-600 text-sm col-span-2"><strong>Paid By:</strong> {expense.paidBy.join(', ')}</p>
+                    <div className="flex justify-start items-end absolute right-80 mt-6">
+                        <p className="text-gray-500 text-xs"><strong>Date:</strong> {expense.date}</p>
+                        <p className="text-gray-500 text-xs ml-4"><strong>Time:</strong> {expense.time}</p>
+                    </div>
+                </div>
+              </li>
+            ))}
+            </ul>
+        )}
+
 
         {error && <p className="text-red-600 mb-4">{error}</p>}
         {successMessage && <p className="text-green-600 mb-4">{successMessage}</p>}
