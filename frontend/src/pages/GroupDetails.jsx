@@ -13,16 +13,12 @@ const GroupDetails = () => {
     description: "",
     category: "",
     paidBy: "",
-    date: "",
-    time: "",
   });
   const [groupMembers, setGroupMembers] = useState([]);
   const [splitBetween, setSplitBetween] = useState([]);
   const [showSplitDropdown, setShowSplitDropdown] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [error, setError] = useState("");
-
-  const groupExpenses = []; // You can replace with real expenses later
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -74,9 +70,12 @@ const GroupDetails = () => {
 
   const handleExpenseFormSubmit = async (e) => {
     e.preventDefault();
+
     const payload = {
-      ...expenseData,
-      paidBy: [expenseData.paidBy],
+      amount: expenseData.amount,
+      description: expenseData.description,
+      category: expenseData.category,
+      paidBy: expenseData.paidBy,
       splitBetween,
       groupId,
     };
@@ -84,58 +83,56 @@ const GroupDetails = () => {
     try {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await api.post("/expenses", payload, config);
+      await api.post("/expense/add", payload, config);
       alert("Expense added!");
       setExpenseData({
         amount: "",
         description: "",
         category: "",
         paidBy: "",
-        date: "",
-        time: "",
       });
       setSplitBetween([]);
       setShowExpenseForm(false);
+      setError("");
     } catch (err) {
-      setError(err.response?.data?.error || "Error submitting expense.");
+      setError(err.response?.data?.message || "Error submitting expense.");
     }
   };
 
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-tr from-slate-800 via-slate-700 to-slate-600 p-8 text-gray-800">
-       
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 bg-white p-6 rounded-xl shadow-sm">
-  <div className="flex flex-1 gap-4">
-    <input
-      type="text"
-      placeholder="Add Member"
-      value={newMember}
-      onChange={(e) => setNewMember(e.target.value)}
-      className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black w-full md:w-64"
-    />
-    <button
-      onClick={handleAddMember}
-      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
-    >
-      Add Member
-    </button>
-  </div>
-  <div className="flex gap-4 mt-4 md:mt-0">
-    <button
-      onClick={() => navigate("/settleup")}
-      className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition duration-200"
-    >
-      Settle Up
-    </button>
-    <button
-      onClick={() => setShowExpenseForm(true)}
-      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200"
-    >
-      Add Expense
-    </button>
-  </div>
-</div>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 bg-white p-6 rounded-xl shadow-sm">
+          <div className="flex flex-1 gap-4">
+            <input
+              type="text"
+              placeholder="Add Member"
+              value={newMember}
+              onChange={(e) => setNewMember(e.target.value)}
+              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black w-full md:w-64"
+            />
+            <button
+              onClick={handleAddMember}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+            >
+              Add Member
+            </button>
+          </div>
+          <div className="flex gap-4 mt-4 md:mt-0">
+            <button
+              onClick={() => navigate("/settleup")}
+              className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition duration-200"
+            >
+              Settle Up
+            </button>
+            <button
+              onClick={() => setShowExpenseForm(true)}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200"
+            >
+              Add Expense
+            </button>
+          </div>
+        </div>
 
         {showExpenseForm && (
           <form
@@ -196,7 +193,7 @@ const GroupDetails = () => {
             >
               <option value="">Select who paid</option>
               {groupMembers.map((m) => (
-                <option key={m._id} value={m.name}>
+                <option key={m._id} value={m._id}>
                   {m.name}
                 </option>
               ))}
@@ -209,7 +206,10 @@ const GroupDetails = () => {
                 className="w-full px-4 py-2 border rounded-lg bg-white text-left"
               >
                 {splitBetween.length > 0
-                  ? splitBetween.join(", ")
+                  ? groupMembers
+                      .filter((m) => splitBetween.includes(m._id))
+                      .map((m) => m.name)
+                      .join(", ")
                   : "Select Members to Split"}
               </button>
               {showSplitDropdown && (
@@ -221,8 +221,8 @@ const GroupDetails = () => {
                     >
                       <input
                         type="checkbox"
-                        value={m.name}
-                        checked={splitBetween.includes(m.name)}
+                        value={m._id}
+                        checked={splitBetween.includes(m._id)}
                         onChange={(e) => {
                           const value = e.target.value;
                           setSplitBetween((prev) =>
