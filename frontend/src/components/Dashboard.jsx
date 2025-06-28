@@ -86,7 +86,8 @@ function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-gray-600 via-gray-400 to-gray-500 p-8 text-white flex relative">
+    
+    <div className="min-h-screen bg-gradient-to-tr from-slate-800 via-slate-700 to-slate-600 p-8 text-white flex relative">
       {/* Profile Button */}
       <div className="absolute top-4 right-4 flex items-center space-x-2 cursor-pointer">
         <FaUserCircle className="text-3xl text-white" />

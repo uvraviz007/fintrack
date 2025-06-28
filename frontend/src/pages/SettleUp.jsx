@@ -19,17 +19,12 @@ const SettleUp = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-r from-gray-700 via-gray-300 to-gray-400 p-8 text-gray-800">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(`/groupdetails/${groupId}`)}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 mb-6 shadow-lg"
-        >
-          Back to Group Details
-        </button>
-
+      <div className="min-h-screen bg-gradient-to-tr from-slate-800 via-slate-700 to-slate-600 p-8 text-gray-800">
+        
         {/* Page Title */}
-        <h1 className="text-4xl font-bold text-gray-700 mb-6 text-center">Settle Up</h1>
+        <h1 className="text-4xl font-bold text-white mb-6 text-center">Settle Up</h1>
+
+        <hr className='border-gray-400 mb-4'></hr>
 
         {/* To Pay Section */}
         <div className="mb-8">

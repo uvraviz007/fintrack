@@ -72,13 +72,7 @@ const CreateGroup = () => {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-r from-gray-700 via-gray-300 to-gray-400 p-8 text-gray-800 flex justify-center items-center relative">
-        <button
-          onClick={() => navigate('/groups')}
-          className="absolute top-6 left-8 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 shadow-lg"
-        >
-          Back to Groups
-        </button>
-
+       
         <div className="w-1/2 bg-white rounded-lg shadow-xl p-8 text-gray-800 border-2 border-blue-600">
           <h2 className="text-3xl font-bold mb-6 text-blue-600 text-center">Create Group</h2>
 

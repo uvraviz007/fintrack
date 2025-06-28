@@ -23,7 +23,7 @@ function Login() {
 
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
-        alert('Login successful!');
+        //alert('Login successful!');
         navigate('/dashboard');
       } else {
         setError('Invalid credentials');

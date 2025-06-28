@@ -116,7 +116,7 @@ const Reports = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-r from-gray-600 via-gray-400 to-gray-500 p-8 text-white">
+      <div className="min-h-screen bg-gradient-to-tr from-slate-800 via-slate-700 to-slate-600 p-8 text-white">
         <h1 className="text-4xl font-bold mb-6 underline">Reports</h1>
 
         {/* Monthly Expense Reports */}

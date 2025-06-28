@@ -7,7 +7,6 @@ function Expense() {
   const [filter, setFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('date');
-  const [monthlyExpenses, setMonthlyExpenses] = useState([]);
 
   useEffect(() => {
     const fetchExpenses = async () => {
@@ -19,9 +18,7 @@ function Expense() {
         }
 
         const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         };
 
         const response = await axios.get('/expenses', config);
@@ -34,116 +31,93 @@ function Expense() {
     fetchExpenses();
   }, []);
 
-  const handleFilterChange = (e) => {
-    setFilter(e.target.value);
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleSortChange = (e) => {
-    setSortOption(e.target.value);
-  };
-
-  
-
   const filteredExpenses = expenses
+    .filter((expense) => (filter ? expense.category === filter : true))
     .filter((expense) =>
-      filter ? expense.category === filter : true
+      searchTerm
+        ? expense.description.toLowerCase().includes(searchTerm.toLowerCase())
+        : true
     )
-    .filter((expense) =>
-      searchTerm ? expense.description.toLowerCase().includes(searchTerm.toLowerCase()) : true
-    )
-    .sort((a, b) => {
-      if (sortOption === 'date') {
-        return new Date(b.date) - new Date(a.date);
-      } else if (sortOption === 'amount') {
-        return b.amount - a.amount;
-      }
-      return 0;
-    });
+    .sort((a, b) =>
+      sortOption === 'date'
+        ? new Date(b.date) - new Date(a.date)
+        : b.amount - a.amount
+    );
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-r from-gray-600 via-gray-400 to-gray-500 p-8 text-white">
-        <h1 className="text-4xl font-bold mb-6 underline ">Expense Management</h1>
-        <hr className='line mb-4'></hr>
+      <div className="min-h-screen bg-gradient-to-tr from-slate-800 via-slate-700 to-slate-600 p-8 text-white font-sans">
+        <h1 className="text-5xl font-extrabold mb-8 tracking-tight underline decoration-blue-500">
+          Expense Management
+        </h1>
 
-        {/* Search Bar and Generate Monthly Expenses */}
-        <div className="flex justify-between items-center mb-6 border-b border-gray-300 pb-4">
-          <div className="w-2/3 border-gray-300">
-            <h2 className="text-2xl font-bold mb-4">Search Expenses</h2>
-            <input
-              type="text"
-              placeholder="Search expenses..."
-              className="text-black w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-          </div>
-          
-        </div>
+        {/* Search & Filters */}
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              {/* Search Box */}
+              <div className="col-span-1 bg-blue-200 border border-gray-200 rounded-xl shadow-sm p-5">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
+                <input
+                  type="text"
+                  placeholder="Search expenses..."
+                  className="w-full px-4 py-2 text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
 
-        {/* Filters and Sort Expenses */}
-        <div className="flex justify-between items-start mb-6 border-b border-gray-300 pb-4">
-          <div className="w-1/2 pr-4 border-r border-gray-300">
-            <h2 className="text-2xl font-bold mb-4">Filter by Category</h2>
-            <select
-              className="w-full text-black px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-              value={filter}
-              onChange={handleFilterChange}
-            >
-              <option value="">All Categories</option>
-              <option value="Food">Food</option>
-              <option value="Travel">Travel</option>
-              <option value="Entertainment">Entertainment</option>
-              <option value="Others">Others</option>
-            </select>
-            <ul className="bg-white rounded-lg shadow-lg p-6 border border-gray-300 text-gray-800">
-              {filteredExpenses.map((expense, index) => (
-                <li key={index} className="border-b py-4">
-                  <strong>{expense.description}</strong> - ₹{expense.amount} ({expense.category})
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="w-1/2 pl-4">
-            <h2 className="text-2xl font-bold mb-4">Sort Expenses</h2>
-            <select
-              className="text-black w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-              value={sortOption}
-              onChange={handleSortChange}
-            >
-              <option value="date">Sort by Date</option>
-              <option value="amount">Sort by Amount</option>
-            </select>
-            <ul className="bg-white rounded-lg shadow-lg p-6 border border-gray-300 text-gray-800">
-              {filteredExpenses.map((expense, index) => (
-                <li key={index} className="border-b py-4">
-                  <strong>{expense.description}</strong> - ₹{expense.amount} ({expense.category})
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+      {/* Filter Box */}
+      <div className="col-span-1 bg-orange-200 border border-gray-200 rounded-xl shadow-sm p-5">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+        <select
+          className="w-full px-4 py-2 text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        >
+          <option value="">All Categories</option>
+          <option value="Food">Food</option>
+          <option value="Travel">Travel</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Others">Others</option>
+        </select>
+      </div>
+
+      {/* Sort Box */}
+      <div className="col-span-1 bg-stone-400 border border-gray-200 rounded-xl shadow-sm p-5">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">Sort By</label>
+        <select
+          className="w-full px-4 py-2 text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value)}
+        >
+          <option value="date">Date</option>
+          <option value="amount">Amount</option>
+        </select>
+      </div>
+    </div>
+
+
 
         {/* Expense List */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-4">Expense List</h2>
-          <ul className="bg-white rounded-lg shadow-lg p-6 border border-gray-300">
-            {filteredExpenses.length > 0 ? (
-              filteredExpenses.map((expense, index) => (
+        <div className="bg-white text-gray-900 rounded-2xl shadow-xl p-6">
+          <h2 className="text-3xl font-bold mb-6 text-slate-800">Expense List</h2>
+          {filteredExpenses.length > 0 ? (
+            <ul className="space-y-4">
+              {filteredExpenses.map((expense, index) => (
                 <li
                   key={index}
-                  className="border-b py-4 text-gray-800 flex justify-between items-start"
+                  className="flex justify-between items-center border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-50"
                 >
                   <div>
-                    <strong className="text-lg">{expense.description}</strong>
+                    <h3 className="text-xl font-semibold text-gray-800">
+                      {expense.description}
+                    </h3>
                     <p className="text-sm text-gray-600">
-                      Amount: ₹{expense.amount} | Paid by: {expense.paidBy}
+                      ₹{expense.amount} • {expense.category} • Paid by: {expense.paidBy}
                     </p>
-                    <p className="text-sm text-gray-600">Category: {expense.category}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Date: {new Date(expense.date).toLocaleDateString()}
+                    </p>
                   </div>
                   <button
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-300"
@@ -152,11 +126,11 @@ function Expense() {
                     Delete
                   </button>
                 </li>
-              ))
-            ) : (
-              <p className="text-gray-500 text-left py-4">No expenses found.</p>
-            )}
-          </ul>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 text-lg">No expenses found.</p>
+          )}
         </div>
       </div>
     </DashboardLayout>

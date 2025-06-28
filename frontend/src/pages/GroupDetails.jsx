@@ -103,44 +103,39 @@ const GroupDetails = () => {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-r from-gray-700 via-gray-300 to-gray-400 p-8 text-gray-800">
-        <button
-          onClick={() => navigate("/groups")}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 mb-6 shadow-lg"
-        >
-          Back to Groups
-        </button>
-
-        <div className="flex items-center space-x-4 mb-6">
-          <input
-            type="text"
-            placeholder="Add Member"
-            value={newMember}
-            onChange={(e) => setNewMember(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 text-black"
-          />
-          <button
-            onClick={handleAddMember}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-          >
-            Add Member
-          </button>
-        </div>
-
-        <div className="flex justify-between mb-4">
-          <button
-            onClick={() => navigate("/settleup")}
-            className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
-          >
-            Settle Up
-          </button>
-          <button
-            onClick={() => setShowExpenseForm(true)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Add Expense
-          </button>
-        </div>
+      <div className="min-h-screen bg-gradient-to-tr from-slate-800 via-slate-700 to-slate-600 p-8 text-gray-800">
+       
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 bg-white p-6 rounded-xl shadow-sm">
+  <div className="flex flex-1 gap-4">
+    <input
+      type="text"
+      placeholder="Add Member"
+      value={newMember}
+      onChange={(e) => setNewMember(e.target.value)}
+      className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black w-full md:w-64"
+    />
+    <button
+      onClick={handleAddMember}
+      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+    >
+      Add Member
+    </button>
+  </div>
+  <div className="flex gap-4 mt-4 md:mt-0">
+    <button
+      onClick={() => navigate("/settleup")}
+      className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition duration-200"
+    >
+      Settle Up
+    </button>
+    <button
+      onClick={() => setShowExpenseForm(true)}
+      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200"
+    >
+      Add Expense
+    </button>
+  </div>
+</div>
 
         {showExpenseForm && (
           <form

@@ -27,7 +27,7 @@ function Signup() {
         password
       });
 
-      alert('Signup successful!');
+      //alert('Signup successful!');
       navigate('/login');
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed. Try again.');
