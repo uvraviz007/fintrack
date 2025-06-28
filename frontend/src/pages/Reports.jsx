@@ -46,7 +46,20 @@ const Reports = () => {
 
     fetchReportsData();
   }, []);
+  const handleGenerateMonthlyExpenses = () => {
+    const monthlyTotals = expenses.reduce((acc, expense) => {
+      const month = new Date(expense.date).toLocaleString('default', { month: 'long' });
+      acc[month] = (acc[month] || 0) + expense.amount;
+      return acc;
+    }, {});
 
+    const formattedMonthlyExpenses = Object.entries(monthlyTotals).map(([month, total]) => ({
+      month,
+      total,
+    }));
+
+    setMonthlyExpenses(formattedMonthlyExpenses);
+  };
   const handleExportPDF = () => {
     alert('Export to PDF functionality coming soon!');
   };
@@ -156,7 +169,18 @@ const Reports = () => {
             </p>
           </div>
         </div>
-
+        <hr className='border-gray-400 mb-4'></hr>
+        {/* create monthly expense section */}
+        <div className="w-1/2 mb-4">
+            <h2 className="text-2xl font-bold mb-4">Generate Monthly Expenses</h2>
+            <button
+              onClick={handleGenerateMonthlyExpenses}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300"
+            >
+              Generate Monthly Expenses
+            </button>
+          </div>
+          <hr className='border-gray-400 mb-4'></hr>
         {/* Export Options */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-4">Export Reports</h2>
