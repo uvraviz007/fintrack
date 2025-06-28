@@ -46,20 +46,7 @@ function Expense() {
     setSortOption(e.target.value);
   };
 
-  const handleGenerateMonthlyExpenses = () => {
-    const monthlyTotals = expenses.reduce((acc, expense) => {
-      const month = new Date(expense.date).toLocaleString('default', { month: 'long' });
-      acc[month] = (acc[month] || 0) + expense.amount;
-      return acc;
-    }, {});
-
-    const formattedMonthlyExpenses = Object.entries(monthlyTotals).map(([month, total]) => ({
-      month,
-      total,
-    }));
-
-    setMonthlyExpenses(formattedMonthlyExpenses);
-  };
+  
 
   const filteredExpenses = expenses
     .filter((expense) =>
@@ -85,7 +72,7 @@ function Expense() {
 
         {/* Search Bar and Generate Monthly Expenses */}
         <div className="flex justify-between items-center mb-6 border-b border-gray-300 pb-4">
-          <div className="w-1/2 pr-4 border-r border-gray-300">
+          <div className="w-2/3 border-gray-300">
             <h2 className="text-2xl font-bold mb-4">Search Expenses</h2>
             <input
               type="text"
@@ -95,15 +82,7 @@ function Expense() {
               onChange={handleSearchChange}
             />
           </div>
-          <div className="w-1/2 pl-4">
-            <h2 className="text-2xl font-bold mb-4">Generate Monthly Expenses</h2>
-            <button
-              onClick={handleGenerateMonthlyExpenses}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300"
-            >
-              Generate Monthly Expenses
-            </button>
-          </div>
+          
         </div>
 
         {/* Filters and Sort Expenses */}
