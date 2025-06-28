@@ -46,33 +46,35 @@ const GroupDetails = () => {
   const groupExpenses = exampleExpenses.filter((expense) => expense.groupId === groupId);
 
   const handleAddMember = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Login required.');
-        return;
-      }
-      const config = {
-        headers: { Authorization: `Bearer ${token}` },
-      };
-
-      const response = await api.put(
-        `/group/${groupId}/add-member`,
-        {
-          newMembers: [newMember],
-        },
-        config
-      );
-
-      alert(`Member "${newMember}" added successfully.`);
-      setNewMember('');
-      setError('');
-      setSuccessMessage(response.data.message);
-    } catch (err) {
-      console.error('Error adding member:', err);
-      setError(err.response?.data?.error || 'Failed to add member.');
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Login required.');
+      return;
     }
-  };
+
+    const config = {
+      headers: { Authorization: `Bearer ${token}` },
+    };
+
+    // 1. Directly send username to backend
+    const response = await api.put(
+      `/group/${groupId}/add-member`,
+      { username: newMember },
+      config
+    );
+
+    alert(`Member "${newMember}" added successfully.`);
+    setNewMember('');
+    setError('');
+    setSuccessMessage(response.data.message);
+  } catch (err) {
+    console.error('Error adding member:', err);
+    setError(err.response?.data?.error || 'Failed to add member.');
+  }
+};
+
+
 
   const handleRemoveMember = () => {
     alert(`Member "${removeMember}" removed from group ${groupId}`);

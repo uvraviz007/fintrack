@@ -58,11 +58,11 @@ router.post('/create', jwtAuthMiddleware, async (req, res) => {
 router.put('/:groupId/add-member', jwtAuthMiddleware, async (req, res) => {
   try {
     const groupId = req.params.groupId;
-    const { newMember } = req.body;
+    const { username } = req.body;
     const userId = req.user.id;
 
-    if (!newMember || typeof newMember !== 'string') {
-      return res.status(400).json({ error: 'newMember must be a valid user ID string' });
+    if (!username || typeof username !== 'string') {
+      return res.status(400).json({ error: 'Username is required' });
     }
 
     const group = await Group.findById(groupId);
@@ -74,20 +74,23 @@ router.put('/:groupId/add-member', jwtAuthMiddleware, async (req, res) => {
       return res.status(403).json({ error: 'Only group creator can add members' });
     }
 
-    // Ensure members is an array
+    const userToAdd = await User.findOne({ username });
+    if (!userToAdd) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     if (!Array.isArray(group.members)) {
       group.members = [];
     }
 
-    // Add new member if not already present
     const currentMembers = group.members.map(id => id.toString());
-    if (currentMembers.includes(newMember.toString())) {
+    if (currentMembers.includes(userToAdd._id.toString())) {
       return res.status(400).json({ error: 'Member already in the group' });
     }
 
-    group.members.push(newMember);
-
+    group.members.push(userToAdd._id);
     const updatedGroup = await group.save();
+
     res.status(200).json({
       message: 'Member added successfully',
       group: updatedGroup
@@ -98,6 +101,7 @@ router.put('/:groupId/add-member', jwtAuthMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 
 // router.put('/:groupId/add-member', jwtAuthMiddleware, async (req, res) => {
