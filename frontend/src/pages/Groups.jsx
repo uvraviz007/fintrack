@@ -16,7 +16,7 @@ const Groups = () => {
           headers: { Authorization: `Bearer ${token}` },
         };
 
-        const response = await api.get('/groups/user', config);
+        const response = await api.get('/group/user', config);
         setGroups(response.data.groups);
       } catch (err) {
         console.error('Error fetching groups:', err);
