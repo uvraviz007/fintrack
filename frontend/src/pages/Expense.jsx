@@ -51,52 +51,51 @@ function Expense() {
           Expense Management
         </h1>
 
-        {/* Search & Filters */}
-        
+        {/* Labels above colored boxes with same background */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
+          <div className="text-sm font-semibold text-white">Search</div>
+          <div className="text-sm font-semibold text-white">Category</div>
+          <div className="text-sm font-semibold text-white">Sort By</div>
+        </div>
+
+        {/* Colored Input Boxes */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-              {/* Search Box */}
-              <div className="col-span-1 bg-blue-200 border border-gray-200 rounded-xl shadow-sm p-5">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
-                <input
-                  type="text"
-                  placeholder="Search expenses..."
-                  className="w-full px-4 py-2 text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
+          {/* Search Box */}
+           <input
+              type="text"
+              placeholder="Search expenses..."
+              className="w-full px-4 py-2 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-white"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          
 
-      {/* Filter Box */}
-      <div className="col-span-1 bg-orange-200 border border-gray-200 rounded-xl shadow-sm p-5">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-        <select
-          className="w-full px-4 py-2 text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        >
-          <option value="">All Categories</option>
-          <option value="Food">Food</option>
-          <option value="Travel">Travel</option>
-          <option value="Entertainment">Entertainment</option>
-          <option value="Others">Others</option>
-        </select>
-      </div>
+          {/* Filter Box */}
+           <select
+              className="w-full px-4 py-2 text-black bg-violet-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-white"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="">All Categories</option>
+              <option value="Food">Food</option>
+              <option value="Travel">Travel</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Others">Others</option>
+            </select>
+          
 
-      {/* Sort Box */}
-      <div className="col-span-1 bg-stone-400 border border-gray-200 rounded-xl shadow-sm p-5">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">Sort By</label>
-        <select
-          className="w-full px-4 py-2 text-gray-900 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          value={sortOption}
-          onChange={(e) => setSortOption(e.target.value)}
-        >
-          <option value="date">Date</option>
-          <option value="amount">Amount</option>
-        </select>
-      </div>
-    </div>
-
-
+          {/* Sort Box */}
+         
+            <select
+              className="w-full px-4 py-2 bg-teal-400 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-white"
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+            >
+              <option value="date">Date</option>
+              <option value="amount">Amount</option>
+            </select>
+          
+        </div>
 
         {/* Expense List */}
         <div className="bg-white text-gray-900 rounded-2xl shadow-xl p-6">
