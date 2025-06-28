@@ -1,27 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../utils/api';
+import api from '../api';
 import DashboardLayout from '../components/DashboardLayout';
 
 const Groups = () => {
   const [groups, setGroups] = useState([]);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchGroups = async () => {
+    const fetchUserGroups = async () => {
       try {
-        // Example data for now; replace with API call later
-        const exampleGroups = [
-          { id: '1', name: 'Group A', members: ['Alice', 'Bob', 'Charlie'] },
-          { id: '2', name: 'Group B', members: ['David', 'Eve', 'Frank'] },
-        ];
-        setGroups(exampleGroups);
-      } catch (error) {
-        console.error('Error fetching groups:', error);
+        const token = localStorage.getItem('token');
+        const config = {
+          headers: { Authorization: `Bearer ${token}` },
+        };
+
+        const response = await api.get('/groups/user', config);
+        setGroups(response.data.groups);
+      } catch (err) {
+        console.error('Error fetching groups:', err);
+        setError('Failed to fetch groups.');
       }
     };
-  
-    fetchGroups();
+
+    fetchUserGroups();
   }, []);
 
   const handleGroupClick = (groupId) => {
@@ -31,7 +34,6 @@ const Groups = () => {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-r from-gray-700 via-gray-300 to-gray-400 p-8 text-gray-800">
-        {/* Create New Group Section */}
         <div className="mb-12 text-center">
           <h1 className="text-3xl font-bold text-gray-600 mb-6">Create a New Group!</h1>
           <button
@@ -42,25 +44,24 @@ const Groups = () => {
           </button>
         </div>
 
-        {/* Horizontal Line */}
         <hr className="border-gray-400 mb-12" />
 
-        {/* Your Groups Section */}
         <div>
           <h2 className="text-3xl font-bold text-gray-600 mb-6 text-center">Your Groups</h2>
+          {error && <p className="text-red-500 text-center">{error}</p>}
           {groups.length === 0 ? (
             <p className="text-gray-500 text-center">You are not part of any groups yet.</p>
           ) : (
             <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {groups.map((group) => (
                 <li
-                  key={group.id}
+                  key={group._id}
                   className="bg-white rounded-lg shadow-lg p-6 text-gray-800 hover:shadow-xl transition duration-300 cursor-pointer"
-                  onClick={() => handleGroupClick(group.id)}
+                  onClick={() => handleGroupClick(group._id)}
                 >
                   <h3 className="text-xl font-semibold text-blue-600 mb-2">{group.name}</h3>
-                  <p className="text-gray-600 mb-1"><strong>Group ID:</strong> {group.id}</p>
-                  <p className="text-gray-600 mb-1"><strong>Members:</strong> {group.members.join(', ')}</p>
+                  <p className="text-gray-600"><strong>Group ID:</strong> {group._id}</p>
+                  <p className="text-gray-600"><strong>Created By:</strong> {group.createdBy.username}</p>
                 </li>
               ))}
             </ul>

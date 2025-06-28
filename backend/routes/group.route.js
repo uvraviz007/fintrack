@@ -123,23 +123,15 @@ router.get('/:groupId/members', jwtAuthMiddleware, async (req, res) => {
 //get the group 
 router.get('/:groupId', jwtAuthMiddleware, async (req, res) => {
   try {
-    const groupId = req.params.groupId;
+    const userId = req.user.id;
 
-    const group = await Group.findById(groupId)
-      .populate('members', 'name username email')
-      .populate('createdBy', 'name username email')
-      .populate('expenses'); // Optional: only if you’ve defined expenses
+    const groups = await Group.find({ members: userId })
+      .populate('createdBy', 'username')
+      .sort({ createdAt: -1 });
 
-    if (!group) {
-      return res.status(404).json({ error: 'Group not found' });
-    }
-
-    res.status(200).json({
-      message: 'Group fetched successfully',
-      group: group
-    });
+    res.status(200).json({ groups });
   } catch (error) {
-    console.error('Error fetching group data:', error);
+    console.error('Error fetching user groups:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
