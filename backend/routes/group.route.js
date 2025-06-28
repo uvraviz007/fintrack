@@ -1,7 +1,9 @@
 const express = require('express')
 const router =express.Router();
+const User = require('./../models/user.model');
 const Group=require('./../models/group.model');
 const Expense=require('./../models/expense.model');
+
 
 const {jwtAuthMiddleware,generateToken}=require('./../jwt');
 
@@ -12,28 +14,44 @@ const {jwtAuthMiddleware,generateToken}=require('./../jwt');
 router.post('/create', jwtAuthMiddleware, async (req, res) => {
   try {
     const { name, members } = req.body;
+    const userId = req.user.id;
 
-    const userId = req.user.id; // this comes from jwtAuthMiddleware
+    // Convert usernames to userIds
+    const users = await User.find({ username: { $in: members } });
 
-    // Ensure the creator is part of the group
-    const uniqueMembers = new Set([...members, userId.toString()]);
+    if (users.length !== members.length) {
+      const foundUsernames = users.map(u => u.username);
+      const notFound = members.filter(m => !foundUsernames.includes(m));
+      return res.status(400).json({
+        error: `User(s) not found: ${notFound.join(', ')}`
+      });
+    }
+
+    const memberIds = users.map(user => user._id.toString());
+
+    // Add creator's userId
+    const uniqueMembers = new Set([...memberIds, userId.toString()]);
     const memberArray = Array.from(uniqueMembers);
 
     const newGroup = new Group({
       name,
       members: memberArray,
-      createdBy: userId
+      createdBy: userId,
     });
 
-    const response = await newGroup.save();
-    console.log('Group created:', response);
+    const savedGroup = await newGroup.save();
+    console.log('Group created:', savedGroup);
 
-    res.status(201).json({ message: 'Group created successfully', group: response });
+    res.status(201).json({ message: 'Group created successfully', group: savedGroup });
   } catch (error) {
     console.error('Error creating group:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
+
+
 
 
 //add members in the  group 

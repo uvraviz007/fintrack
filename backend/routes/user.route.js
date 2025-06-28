@@ -23,7 +23,7 @@ router.post('/signup', async (req, res) => {
         res.status(500).json({ error: 'internal server error' });
     }
 });
-
+//login process
 router.post('/login', async(req, res) => {
     try{
         // Extract username and password from request body
@@ -34,7 +34,6 @@ router.post('/login', async(req, res) => {
         if (!username || !password) {
             return res.status(400).json({ error: 'username and password are required' });
         }
-
         // Find the user by username
         const user = await User.findOne({username});
         console.log('user:', user);
@@ -42,13 +41,11 @@ router.post('/login', async(req, res) => {
         if( !user || !(await user.comparePassword(password))){
             return res.status(401).json({error: 'Invalid Username or Password'});
         }
-
         // generate Token 
         const payload = {
             id: user.id,
         }
         const token = generateToken(payload);
-
         // resturn token as response
         res.json({token})
     }catch(err){
