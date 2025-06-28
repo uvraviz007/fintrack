@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import api from "../api";
@@ -16,6 +16,9 @@ const GroupDetails = () => {
     date: "",
     time: "",
   });
+  const [groupMembers, setGroupMembers] = useState(["Alice", "Bob", "Charlie"]); // Replace with API
+  const [splitBetween, setSplitBetween] = useState([]);
+  const [showSplitDropdown, setShowSplitDropdown] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -28,7 +31,7 @@ const GroupDetails = () => {
       category: "Food",
       date: "2025-06-27",
       time: "19:30",
-      paidBy: ["Alice", "Bob"],
+      paidBy: ["Alice"],
     },
     {
       id: "2",
@@ -46,6 +49,18 @@ const GroupDetails = () => {
     (expense) => expense.groupId === groupId
   );
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".split-dropdown")) {
+        setShowSplitDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleAddMember = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -58,7 +73,6 @@ const GroupDetails = () => {
         headers: { Authorization: `Bearer ${token}` },
       };
 
-      // 1. Directly send username to backend
       const response = await api.put(
         `/group/${groupId}/add-member`,
         { username: newMember },
@@ -75,26 +89,39 @@ const GroupDetails = () => {
     }
   };
 
-  const handleSettleUp = () => {
-    navigate(`/settleup/${groupId}`);
-  };
-
-  const handleAddExpense = () => {
-    setShowExpenseForm(true);
-  };
-
-  const handleExpenseFormSubmit = (e) => {
+  const handleExpenseFormSubmit = async (e) => {
     e.preventDefault();
-    alert("Expense added successfully!");
-    setShowExpenseForm(false);
-    setExpenseData({
-      amount: "",
-      description: "",
-      category: "",
-      paidBy: "",
-      date: "",
-      time: "",
-    });
+
+    const expensePayload = {
+      ...expenseData,
+      groupId,
+      paidBy: [expenseData.paidBy], // ensure array format
+      splitBetween,
+    };
+
+    try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
+
+      await api.post(`/expenses`, expensePayload, config);
+
+      alert("Expense added successfully!");
+      setShowExpenseForm(false);
+      setExpenseData({
+        amount: "",
+        description: "",
+        category: "",
+        paidBy: "",
+        date: "",
+        time: "",
+      });
+      setSplitBetween([]);
+    } catch (err) {
+      console.error("Error adding expense:", err);
+      setError(err.response?.data?.error || "Failed to add expense.");
+    }
   };
 
   return (
@@ -126,9 +153,6 @@ const GroupDetails = () => {
           </div>
         </div>
 
-        <hr className="border-gray-400 mb-4"></hr>
-
-        {/* Settle Up and Add Expense Buttons */}
         <div className="flex justify-between items-center mb-4">
           <button
             onClick={() => navigate("/settleup")}
@@ -137,20 +161,20 @@ const GroupDetails = () => {
             Settle Up
           </button>
           <button
-            onClick={handleAddExpense}
+            onClick={() => setShowExpenseForm(true)}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 shadow-lg"
           >
             Add Expense
           </button>
         </div>
+
         <hr className="border-gray-400 mb-12" />
-        {/* Expense Form */}
+
         {showExpenseForm && (
           <form
             onSubmit={handleExpenseFormSubmit}
             className="bg-white rounded-lg shadow-lg p-6 mb-6 relative"
           >
-            {/* Close Button */}
             <button
               type="button"
               onClick={() => setShowExpenseForm(false)}
@@ -183,14 +207,6 @@ const GroupDetails = () => {
                 }
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
               />
-              {/* <input
-                    type="text"
-                    placeholder="Category"
-                    value={expenseData.category}
-                    onChange={(e) => setExpenseData({ ...expenseData, category: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-                /> */}
-
               <select
                 value={expenseData.category}
                 onChange={(e) =>
@@ -209,31 +225,62 @@ const GroupDetails = () => {
                   )
                 )}
               </select>
-              <input
-                type="text"
-                placeholder="Paid By"
+
+              {/* ✅ Replaced Paid By input with dropdown */}
+              <select
                 value={expenseData.paidBy}
                 onChange={(e) =>
                   setExpenseData({ ...expenseData, paidBy: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-              />
-              <input
-                type="date"
-                value={expenseData.date}
-                onChange={(e) =>
-                  setExpenseData({ ...expenseData, date: e.target.value })
-                }
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-              />
-              <input
-                type="time"
-                value={expenseData.time}
-                onChange={(e) =>
-                  setExpenseData({ ...expenseData, time: e.target.value })
-                }
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-              />
+                className="w-full px-4 py-2 border rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="" disabled>
+                  Select who paid
+                </option>
+                {groupMembers.map((member) => (
+                  <option key={member} value={member}>
+                    {member}
+                  </option>
+                ))}
+              </select>
+
+              <div className="split-dropdown relative">
+                <button
+                  type="button"
+                  onClick={() => setShowSplitDropdown(!showSplitDropdown)}
+                  className="w-full px-4 py-2 border rounded-lg bg-white text-left focus:outline-none focus:ring-2 focus:ring-blue-600"
+                >
+                  {splitBetween.length > 0
+                    ? splitBetween.join(", ")
+                    : "Select Members"}
+                </button>
+                {showSplitDropdown && (
+                  <div className="absolute mt-1 w-full bg-white border rounded-lg shadow z-10 max-h-40 overflow-y-auto">
+                    {groupMembers.map((member) => (
+                      <label
+                        key={member}
+                        className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          value={member}
+                          checked={splitBetween.includes(member)}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setSplitBetween((prev) =>
+                              prev.includes(value)
+                                ? prev.filter((m) => m !== value)
+                                : [...prev, value]
+                            );
+                          }}
+                          className="mr-2"
+                        />
+                        {member}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <button
               type="submit"
@@ -244,7 +291,6 @@ const GroupDetails = () => {
           </form>
         )}
 
-        {/* Expenses Section */}
         {groupExpenses.length === 0 ? (
           <p className="text-gray-500 text-lg text-center">
             No expenses found for this group.

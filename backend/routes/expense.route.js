@@ -11,7 +11,7 @@ const { jwtAuthMiddleware } = require('./../jwt');
 //adding the expense
 router.post('/add', jwtAuthMiddleware, async (req, res) => {
   try {
-    const { group: groupName, description, amount, paidBy, splitBetween } = req.body;
+    const { group: groupName, amount,description,category,paidBy, splitBetween } = req.body;
 
     if (!groupName || !description || !amount || !paidBy || !splitBetween || splitBetween.length === 0) {
       return res.status(400).json({ message: 'Missing fields' });
