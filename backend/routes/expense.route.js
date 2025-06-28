@@ -11,46 +11,50 @@ const { jwtAuthMiddleware } = require('./../jwt');
 //adding the expense
 router.post('/add', jwtAuthMiddleware, async (req, res) => {
   try {
-    const { group: groupName, amount,description,category,paidBy, splitBetween } = req.body;
+    const { groupId, amount, description, category, paidBy, splitBetween } = req.body;
 
-    if (!groupName || !description || !amount || !paidBy || !splitBetween || splitBetween.length === 0) {
+    console.log("Incoming expense data:", req.body);
+
+    if (!groupId || !description || !amount || !paidBy || !splitBetween?.length) {
       return res.status(400).json({ message: 'Missing fields' });
     }
 
-    // Find the group by name
-    const groupDoc = await Group.findOne({ name: groupName });
+    const groupDoc = await Group.findById(groupId);
     if (!groupDoc) {
       return res.status(404).json({ message: 'Group not found' });
     }
 
-    // Check if all users are members of the group
-    const allUsersValid = splitBetween.every(userId => groupDoc.members.includes(userId));
-    if (!allUsersValid || !groupDoc.members.includes(paidBy)) {
+    // Compare ObjectIds properly
+    const isPaidByValid = groupDoc.members.some(m => m.equals(paidBy));
+    const allSplitValid = splitBetween.every(uid =>
+      groupDoc.members.some(m => m.equals(uid))
+    );
+
+    if (!isPaidByValid || !allSplitValid) {
       return res.status(400).json({ message: 'Users must be part of the group' });
     }
 
-    // Create new expense
     const expense = new Expense({
       group: groupDoc._id,
       description,
       amount,
+      category,
       paidBy,
       splitBetween,
     });
 
     await expense.save();
 
-    // Update group document to include the new expense
     groupDoc.expenses.push(expense._id);
     await groupDoc.save();
 
     res.status(201).json({ message: 'Expense added and group updated successfully', expense });
+
   } catch (err) {
-    console.error(err);
+    console.error('Error adding expense:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 
 //deleting the expense
