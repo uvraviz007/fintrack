@@ -414,40 +414,49 @@ const GroupDetails = () => {
 
   // --- Member Management ---
   const handleAddMember = async () => {
-    if (!newMemberUsername.trim()) {
-      setMessage({ type: "error", text: "Please enter a username to add." });
-      return;
-    }
-    setSubmitting(true);
-    setMessage({ type: "", text: "" }); // Clear previous messages
-    try {
-      const token = localStorage.getItem("token");
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      // Assuming your backend returns the updated list of members for the group
-      const response = await api.put(
-        `/group/${groupId}/add-member`,
-        { username: newMemberUsername },
-        config
-      );
-      const updatedMembers = response.data.members;
-      setGroupMembers(updatedMembers); // Update members list from response
-      setNewMemberUsername("");
-      setMessage({ type: "success", text: response.data.message || "Member added successfully!" });
+  if (!newMemberUsername.trim()) {
+    setMessage({ type: "error", text: "Please enter a username to add." });
+    return;
+  }
 
-      // After adding a member, update the splitBetween and paidBy defaults if needed
-      // Ensure existing members and the newly added one are in splitBetween
-      setSplitBetween(updatedMembers.map(m => m._id));
-      if (!expenseData.paidBy && updatedMembers.length > 0) {
-        setExpenseData(prev => ({ ...prev, paidBy: updatedMembers[0]._id }));
-      }
+  setSubmitting(true);
+  setMessage({ type: "", text: "" }); // Clear previous messages
 
-    } catch (err) {
-      console.error("Error adding member:", err.response || err);
-      setMessage({ type: "error", text: err.response?.data?.message || "Failed to add member." });
-    } finally {
-      setSubmitting(false);
+  try {
+    const token = localStorage.getItem("token");
+    const config = { headers: { Authorization: `Bearer ${token}` } };
+
+    const response = await api.put(
+      `/group/${groupId}/add-member`,
+      { username: newMemberUsername },
+      config
+    );
+
+    // ✅ Access updated members safely from the response
+    const updatedMembers = response?.data?.group?.members || [];
+
+    setGroupMembers(updatedMembers); // Update the members state
+    setNewMemberUsername("");
+    setMessage({ type: "success", text: response.data.message || "Member added successfully!" });
+
+    // ✅ Update splitBetween and paidBy fields if needed
+    setSplitBetween(updatedMembers.map(m => m._id));
+
+    if (!expenseData.paidBy && updatedMembers.length > 0) {
+      setExpenseData(prev => ({ ...prev, paidBy: updatedMembers[0]._id }));
     }
-  };
+
+  } catch (err) {
+    console.error("Error adding member:", err.response || err);
+    setMessage({
+      type: "error",
+      text: err.response?.data?.error || "Failed to add member."
+    });
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   // --- Expense Form Handlers ---
   const handleExpenseInputChange = (e) => {
