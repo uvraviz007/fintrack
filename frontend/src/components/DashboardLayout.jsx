@@ -45,74 +45,79 @@
 
 // export default DashboardLayout;
 
+
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; // Import useLocation for active link styling
-import { FaHome, FaUsers, FaMoneyBillWave, FaChartPie } from 'react-icons/fa'; // Import relevant icons
+import { useNavigate } from 'react-router-dom';
+import { FaUserCircle, FaHome, FaUsers, FaMoneyBillWave, FaChartBar } from 'react-icons/fa';
 
 function DashboardLayout({ children }) {
   const navigate = useNavigate();
-  const location = useLocation(); // Hook to get current path
-
-  // Helper function to determine if a link is active
-  const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-8 text-white flex font-sans antialiased">
-      {/* Left Sidebar */}
-      <div className="w-64 bg-gray-800 rounded-2xl shadow-2xl p-6 text-white mr-8 flex flex-col border border-gray-700">
-        {/* Logo/App Title */}
-        <div className="mb-10 text-center">
-          <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500 tracking-wide">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 p-6 md:p-8 text-gray-100 flex relative">
+      
+      {/* Left Sidebar - Replicated from Dashboard.jsx */}
+      <div className="w-64 bg-gray-800 rounded-3xl shadow-2xl p-8 text-white mr-10 flex flex-col items-center justify-between border border-gray-700 h-[calc(100vh-64px)] sticky top-8">
+        <div>
+          <h2 className="text-4xl font-extrabold text-center mb-10 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 tracking-wide">
             FinTrack
           </h2>
+          <ul className="space-y-6 text-xl font-medium">
+            <li
+              className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition duration-200 ${
+                window.location.pathname === '/dashboard' ? 'bg-gray-700 text-blue-400 shadow-inner' : 'hover:bg-gray-700 hover:text-blue-300'
+              }`}
+              onClick={() => navigate('/dashboard')}
+              title="Dashboard Home"
+            >
+              <FaHome className="text-2xl" />
+              <span>Dashboard</span>
+            </li>
+            <li
+              className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer hover:bg-gray-700 hover:text-blue-300 transition duration-200 ${
+                window.location.pathname === '/groups' ? 'bg-gray-700 text-blue-400 shadow-inner' : 'hover:bg-gray-700 hover:text-blue-300'
+              }`}
+              onClick={() => navigate('/groups')}
+              title="Manage Your Groups"
+            >
+              <FaUsers className="text-2xl" />
+              <span>Groups</span>
+            </li>
+            <li
+              className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer hover:bg-gray-700 hover:text-blue-300 transition duration-200 ${
+                window.location.pathname === '/expenses' ? 'bg-gray-700 text-blue-400 shadow-inner' : 'hover:bg-gray-700 hover:text-blue-300'
+              }`}
+              onClick={() => navigate('/expense')}
+              title="View All Expenses"
+            >
+              <FaMoneyBillWave className="text-2xl" />
+              <span>Expenses</span>
+            </li>
+            <li
+              className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer hover:bg-gray-700 hover:text-blue-300 transition duration-200 ${
+                window.location.pathname === '/reports' ? 'bg-gray-700 text-blue-400 shadow-inner' : 'hover:bg-gray-700 hover:text-blue-300'
+              }`}
+              onClick={() => navigate('/reports')}
+              title="Generate Reports"
+            >
+              <FaChartBar className="text-2xl" />
+              <span>Reports</span>
+            </li>
+            
+          </ul>
         </div>
-
-        {/* Navigation Links */}
-        <ul className="space-y-4 text-lg font-medium flex-grow">
-          <li
-            className={`cursor-pointer flex items-center space-x-3 p-3 rounded-lg transition duration-200 ease-in-out
-              ${isActive('/dashboard') ? 'bg-gray-700 text-teal-300 shadow-md font-bold' : 'text-gray-300 hover:bg-gray-700 hover:text-blue-300'}`}
-            onClick={() => navigate('/dashboard')}
-          >
-            <FaHome className="text-xl" />
-            <span>Dashboard</span>
-          </li>
-          <li
-            className={`cursor-pointer flex items-center space-x-3 p-3 rounded-lg transition duration-200 ease-in-out
-              ${isActive('/groups') ? 'bg-gray-700 text-teal-300 shadow-md font-bold' : 'text-gray-300 hover:bg-gray-700 hover:text-blue-300'}`}
-            onClick={() => navigate('/groups')}
-          >
-            <FaUsers className="text-xl" />
-            <span>Groups</span>
-          </li>
-          <li
-            className={`cursor-pointer flex items-center space-x-3 p-3 rounded-lg transition duration-200 ease-in-out
-              ${isActive('/expense') ? 'bg-gray-700 text-teal-300 shadow-md font-bold' : 'text-gray-300 hover:bg-gray-700 hover:text-blue-300'}`}
-            onClick={() => navigate('/expense')}
-          >
-            <FaMoneyBillWave className="text-xl" />
-            <span>Expenses</span>
-          </li>
-          <li
-            className={`cursor-pointer flex items-center space-x-3 p-3 rounded-lg transition duration-200 ease-in-out
-              ${isActive('/reports') ? 'bg-gray-700 text-teal-300 shadow-md font-bold' : 'text-gray-300 hover:bg-gray-700 hover:text-blue-300'}`}
-            onClick={() => navigate('/reports')}
-          >
-            <FaChartPie className="text-xl" />
-            <span>Reports</span>
-          </li>
-        </ul>
-
-        {/* You can add a footer or version info here if needed */}
-        <div className="mt-auto pt-6 text-center text-gray-600 text-sm">
-          &copy; {new Date().getFullYear()} FinTrack. All rights reserved.
-        </div>
+        <button
+                  onClick={() => navigate('/profile')}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-full shadow-lg hover:from-blue-700 hover:to-cyan-700 transition duration-300 transform hover:scale-105 flex items-center space-x-2 font-semibold text-lg mt-10"
+                  title="Go to Profile"
+                >
+                  <FaUserCircle className="text-2xl" />
+                  <span>Profile</span>
+                </button>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 rounded-2xl bg-gray-800 bg-opacity-40 backdrop-filter backdrop-blur-lg p-8 shadow-inner border border-gray-700 overflow-auto">
-        {children}
-      </div>
+      <div className="flex-1">{children}</div>
     </div>
   );
 }
