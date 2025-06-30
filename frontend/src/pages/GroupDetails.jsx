@@ -1,5 +1,3 @@
-
-
 // export default GroupDetails;
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -213,89 +211,88 @@ const GroupDetails = () => {
   };
 
   const handleExpenseFormSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Basic client-side validation
-  if (
-    !expenseData.amount ||
-    !expenseData.description ||
-    !expenseData.category ||
-    !expenseData.paidBy ||
-    !expenseData.date ||
-    !expenseData.time ||
-    !Array.isArray(splitBetween) ||
-    splitBetween.length === 0
-  ) {
-    setMessage({
-      type: "error",
-      text: "Please fill all required expense fields and select at least one person to split with.",
-    });
-    return;
-  }
+    // Basic client-side validation
+    if (
+      !expenseData.amount ||
+      !expenseData.description ||
+      !expenseData.category ||
+      !expenseData.paidBy ||
+      !expenseData.date ||
+      !expenseData.time ||
+      !Array.isArray(splitBetween) ||
+      splitBetween.length === 0
+    ) {
+      setMessage({
+        type: "error",
+        text: "Please fill all required expense fields and select at least one person to split with.",
+      });
+      return;
+    }
 
-  if (
-    isNaN(parseFloat(expenseData.amount)) ||
-    parseFloat(expenseData.amount) <= 0
-  ) {
-    setMessage({
-      type: "error",
-      text: "Amount must be a positive number.",
-    });
-    return;
-  }
+    if (
+      isNaN(parseFloat(expenseData.amount)) ||
+      parseFloat(expenseData.amount) <= 0
+    ) {
+      setMessage({
+        type: "error",
+        text: "Amount must be a positive number.",
+      });
+      return;
+    }
 
-  setSubmitting(true);
-  setMessage({ type: "", text: "" }); // Clear previous messages
+    setSubmitting(true);
+    setMessage({ type: "", text: "" }); // Clear previous messages
 
-  const payload = {
-    ...expenseData,
-    amount: parseFloat(expenseData.amount),
-    paidBy: expenseData.paidBy,
-    splitBetween: splitBetween,
-    groupId,
+    const payload = {
+      ...expenseData,
+      amount: parseFloat(expenseData.amount),
+      paidBy: expenseData.paidBy,
+      splitBetween: splitBetween,
+      groupId,
+    };
+
+    try {
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
+      const response = await api.post("/expense/add", payload, config);
+
+      // Update UI
+      setGroupExpenses((prev) => [{ ...payload, _id: response.data._id || new Date().toISOString() }, ...prev]);
+      setMessage({ type: "success", text: "Expense added successfully!" });
+
+      // Safely build default values from groupMembers
+      const validMembers = Array.isArray(groupMembers)
+        ? groupMembers.filter((m) => m && m._id)
+        : [];
+
+      const defaultPaidBy = validMembers.length > 0 ? validMembers[0]._id : "";
+      const defaultSplitBetween = validMembers.map((m) => m._id);
+
+      setExpenseData({
+        amount: "",
+        description: "",
+        category: "",
+        paidBy: defaultPaidBy,
+        date: new Date().toISOString().slice(0, 10),
+        time: new Date().toTimeString().slice(0, 5),
+      });
+
+      setSplitBetween(defaultSplitBetween);
+      setShowExpenseForm(false);
+      setShowSplitDropdown(false);
+    } catch (err) {
+      console.error("Error submitting expense:", err.response || err);
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Failed to add expense.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
-
-  try {
-    const token = localStorage.getItem("token");
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-
-    const response = await api.post("/expense/add", payload, config);
-
-    // Update UI
-    setGroupExpenses((prev) => [response.data, ...prev]);
-    setMessage({ type: "success", text: "Expense added successfully!" });
-
-    // Safely build default values from groupMembers
-    const validMembers = Array.isArray(groupMembers)
-      ? groupMembers.filter((m) => m && m._id)
-      : [];
-
-    const defaultPaidBy = validMembers.length > 0 ? validMembers[0]._id : "";
-    const defaultSplitBetween = validMembers.map((m) => m._id);
-
-    setExpenseData({
-      amount: "",
-      description: "",
-      category: "",
-      paidBy: defaultPaidBy,
-      date: new Date().toISOString().slice(0, 10),
-      time: new Date().toTimeString().slice(0, 5),
-    });
-
-    setSplitBetween(defaultSplitBetween);
-    setShowExpenseForm(false);
-    setShowSplitDropdown(false);
-  } catch (err) {
-    console.error("Error submitting expense:", err.response || err);
-    setMessage({
-      type: "error",
-      text: err.response?.data?.message || "Failed to add expense.",
-    });
-  } finally {
-    setSubmitting(false);
-  }
-};
-
 
   return (
     <DashboardLayout>
@@ -661,13 +658,14 @@ const GroupDetails = () => {
                         Split between:{" "}
                         <span className="font-medium text-purple-300">
                           {/* Map splitBetween IDs to usernames */}
-                          {expense.splitBetween
-                            .map(
-                              (memberId) =>
-                                groupMembers.find((m) => m._id === memberId)
-                                  ?.username || "Unknown"
-                            )
-                            .join(", ")}
+                          {Array.isArray(expense.splitBetween) &&
+                            expense.splitBetween
+                              .map(
+                                (memberId) =>
+                                  groupMembers.find((m) => m._id === memberId)
+                                    ?.username || "Unknown"
+                              )
+                              .join(", ")}
                         </span>
                       </p>
                     </div>
