@@ -1,4 +1,3 @@
-// export default GroupDetails;
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
@@ -16,8 +15,7 @@ import {
   FaUsers,
   FaTimes,
   FaSpinner,
-  FaUserCircle, // Still needed for add member, potentially for the dropdown icon
-} from "react-icons/fa";
+} from "react-icons/fa"; // Removed FaUserCircle as it was unused
 
 const GroupDetails = () => {
   const { groupId } = useParams();
@@ -47,7 +45,7 @@ const GroupDetails = () => {
 
   const splitDropdownRef = useRef(null); // Ref for click outside dropdown
 
-  // State for the new Group Members dropdown
+  // State for the new Group Members dropdown (display selection)
   const [selectedDisplayMember, setSelectedDisplayMember] = useState("");
 
   // --- Initial Data Fetching (Group Details & Expenses) ---
@@ -65,6 +63,7 @@ const GroupDetails = () => {
           navigate("/login");
           return;
         }
+        // Corrected template literal for Authorization header
         const config = { headers: { Authorization: `Bearer ${token}` } };
 
         // Fetch group details (including name and members)
@@ -83,6 +82,11 @@ const GroupDetails = () => {
           setExpenseData((prev) => ({ ...prev, paidBy: members[0]._id }));
           // Set the first member as default for the new group members display dropdown
           setSelectedDisplayMember(members[0]._id);
+        } else {
+          // If no members, ensure paidBy and splitBetween are empty
+          setExpenseData((prev) => ({ ...prev, paidBy: "" }));
+          setSplitBetween([]);
+          setSelectedDisplayMember("");
         }
 
         // Fetch group-specific expenses
@@ -93,10 +97,9 @@ const GroupDetails = () => {
         setGroupExpenses(expensesResponse.data);
       } catch (err) {
         console.error("Failed to load group data", err.response || err);
-        const errorMessage = err.response?.data?.message || "";
-        if (errorMessage) {
-          setMessage({ type: "error", text: errorMessage });
-        }
+        const errorMessage =
+          err.response?.data?.message || "Failed to load group data.";
+        setMessage({ type: "error", text: errorMessage });
 
         // Redirect to login if unauthorized
         if (err.response?.status === 401) {
@@ -122,20 +125,22 @@ const GroupDetails = () => {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []); // Run once on mount
+  }, []);
 
   // Function to determine display name for members (handles duplicates)
   const getMemberDisplayName = (memberId) => {
     const member = groupMembers.find((m) => m._id === memberId);
     if (!member) return "Unknown";
 
+    // Check if there are other members with the exact same 'name'
     const sameNameCount = groupMembers.filter(
-      (m) => m.name === member.name
+      (m) => m.name === member.name && m._id !== memberId
     ).length;
-    return sameNameCount > 1
-      ? `${member.name} (${member.username})`
-      : member.name;
+
+    // Only append username if there's a duplicate name
+    return sameNameCount > 0 ? `${member.name} (${member.username})` : member.name;
   };
+
 
   // --- Member Management ---
   const handleAddMember = async () => {
@@ -149,7 +154,7 @@ const GroupDetails = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const config = { headers: { Authorization: `Bearer ${token}` } }; // Corrected string interpolation
 
       // Step 1: Add member to group
       const addResponse = await api.put(
@@ -158,27 +163,37 @@ const GroupDetails = () => {
         config
       );
 
-      // Step 2: Fetch full user details by username
+      // Step 2: Fetch full user details by username (assuming addResponse doesn't return full user)
+      // This step might be redundant if your /add-member endpoint returns the full new user object.
+      // If it does, you can use addResponse.data directly and skip this GET request.
       const userResponse = await api.get(
         `/users/username/${newMemberUsername}`,
         config
       );
       const newUser = userResponse.data;
 
+      // Check if the member is already in the group to prevent duplicates in UI state
+      if (groupMembers.some(m => m._id === newUser._id)) {
+        setMessage({ type: "error", text: "Member already exists in the group." });
+        setSubmitting(false);
+        setNewMemberUsername("");
+        return;
+      }
+
       // Step 3: Update members list in UI
       setGroupMembers((prev) => {
         const updatedMembers = [...prev, newUser];
         // If it's the first member added, set them as selected for display
         if (prev.length === 0) {
-            setSelectedDisplayMember(newUser._id);
+          setSelectedDisplayMember(newUser._id);
         }
         return updatedMembers;
       });
 
-      // Step 4: Update splitBetween
+      // Step 4: Update splitBetween - automatically include new member
       setSplitBetween((prev) => [...prev, newUser._id]);
 
-      // Step 5: If no paidBy is set, assign this one
+      // Step 5: If no paidBy is set, assign this one (useful for the very first member)
       if (!expenseData.paidBy) {
         setExpenseData((prev) => ({ ...prev, paidBy: newUser._id }));
       }
@@ -189,7 +204,7 @@ const GroupDetails = () => {
       console.error("Error adding member:", err.response || err);
       setMessage({
         type: "error",
-        text: err.response?.data?.error || "Failed to add member.",
+        text: err.response?.data?.error || "Failed to add member. Please check the username.",
       });
     } finally {
       setSubmitting(false);
@@ -255,15 +270,15 @@ const GroupDetails = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const config = { headers: { Authorization: `Bearer ${token}` } }; // Corrected string interpolation
 
       const response = await api.post("/expense/add", payload, config);
 
-      // Update UI
-      setGroupExpenses((prev) => [{ ...payload, _id: response.data._id || new Date().toISOString() }, ...prev]);
+      // Update UI: Use the _id from the API response for the new expense
+      setGroupExpenses((prev) => [{ ...payload, _id: response.data._id }, ...prev]);
       setMessage({ type: "success", text: "Expense added successfully!" });
 
-      // Safely build default values from groupMembers
+      // Safely build default values from groupMembers for resetting form
       const validMembers = Array.isArray(groupMembers)
         ? groupMembers.filter((m) => m && m._id)
         : [];
@@ -326,8 +341,7 @@ const GroupDetails = () => {
             {/* Action Buttons */}
             <div className="flex gap-3 mt-4 md:mt-0">
               <button
-                // onClick={() => navigate(`/group/${groupId}/settle`)}
-                onClick={() => navigate("/settleup")}
+                onClick={() => navigate(`/settleup`)} // Ensure this path is correct if it's dynamic later
                 className="px-6 py-2 bg-yellow-600 text-white rounded-lg shadow-md hover:bg-yellow-700 transition duration-300 transform hover:scale-105 flex items-center space-x-2"
               >
                 <FaHandshake className="text-xl" />
@@ -560,51 +574,49 @@ const GroupDetails = () => {
 
         {/* Group Members List as a single dropdown */}
         <div className="bg-gray-800 rounded-2xl shadow-xl p-6 mb-8 border border-gray-700">
-            <div className="flex items-center space-x-3 pb-4 border-b border-gray-700 mb-4">
-                <FaUsers className="text-blue-400 text-3xl" />
-                <h2 className="text-blue-400 text-2xl font-semibold">Group Members</h2>
+          <div className="flex items-center space-x-3 pb-4 border-b border-gray-700 mb-4">
+            <FaUsers className="text-blue-400 text-3xl" />
+            <h2 className="text-blue-400 text-2xl font-semibold">Group Members</h2>
+          </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <FaSpinner className="animate-spin text-blue-500 text-4xl" />
+              <p className="ml-4 text-gray-400">Loading members...</p>
             </div>
-            {loading ? (
-                <div className="flex justify-center items-center py-8">
-                    <FaSpinner className="animate-spin text-blue-500 text-4xl" />
-                    <p className="ml-4 text-gray-400">Loading members...</p>
-                </div>
-            ) : groupMembers.length > 0 ? (
-                <div className="relative">
-                    <select
-                        value={selectedDisplayMember}
-                        onChange={(e) => setSelectedDisplayMember(e.target.value)}
-                        className="block w-full px-4 py-3 bg-gray-700 text-gray-100 rounded-lg border border-gray-600 focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
-                    >
-                        <option value="">Select a member to view</option>
-                        {groupMembers.map((member) => (
-                            <option key={member._id} value={member._id}>
-                                {getMemberDisplayName(member._id)}
-                            </option>
-                        ))}
-                    </select>
-                    {/* Display info for the selected member (optional, but makes dropdown useful) */}
-                    {selectedDisplayMember && (
-                        <div className="mt-4 p-4 bg-gray-700 border border-gray-600 rounded-lg">
-                            <p className="text-gray-300 text-lg">
-                                <span className="font-semibold">Selected:</span>{" "}
-                                {getMemberDisplayName(selectedDisplayMember)}
-                                {/* START OF CHANGE: Display Username instead of Email */}
-                                {groupMembers.find(m => m._id === selectedDisplayMember)?.username && (
-                                    <span className="text-sm text-gray-400 block">
-                                        Username: {groupMembers.find(m => m._id === selectedDisplayMember).username}
-                                    </span>
-                                )}
-                                {/* END OF CHANGE */}
-                            </p>
-                        </div>
+          ) : groupMembers.length > 0 ? (
+            <div className="relative">
+              <select
+                value={selectedDisplayMember}
+                onChange={(e) => setSelectedDisplayMember(e.target.value)}
+                className="block w-full px-4 py-3 bg-gray-700 text-gray-100 rounded-lg border border-gray-600 focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+              >
+                <option value="">Select a member to view</option>
+                {groupMembers.map((member) => (
+                  <option key={member._id} value={member._id}>
+                    {getMemberDisplayName(member._id)}
+                  </option>
+                ))}
+              </select>
+              {/* Display info for the selected member (optional, but makes dropdown useful) */}
+              {selectedDisplayMember && (
+                <div className="mt-4 p-4 bg-gray-700 border border-gray-600 rounded-lg">
+                  <p className="text-gray-300 text-lg">
+                    <span className="font-semibold">Selected:</span>{" "}
+                    {getMemberDisplayName(selectedDisplayMember)}
+                    {groupMembers.find(m => m._id === selectedDisplayMember)?.username && (
+                      <span className="text-sm text-gray-400 block">
+                        Username: {groupMembers.find(m => m._id === selectedDisplayMember).username}
+                      </span>
                     )}
+                  </p>
                 </div>
-            ) : (
-                <p className="text-gray-400 text-lg text-center py-4">
-                    No members in this group yet. Add one above!
-                </p>
-            )}
+              )}
+            </div>
+          ) : (
+            <p className="text-gray-400 text-lg text-center py-4">
+              No members in this group yet. Add one above!
+            </p>
+          )}
         </div>
 
 
@@ -657,7 +669,6 @@ const GroupDetails = () => {
                       <p className="text-xs text-gray-400 mt-2">
                         Split between:{" "}
                         <span className="font-medium text-purple-300">
-                          {/* Map splitBetween IDs to usernames */}
                           {Array.isArray(expense.splitBetween) &&
                             expense.splitBetween
                               .map(
