@@ -306,8 +306,6 @@
 // };
 
 // export default GroupDetails;
-
-
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
@@ -325,7 +323,7 @@ import {
   FaUsers,
   FaTimes,
   FaSpinner,
-  FaUserCircle,
+  FaUserCircle, // Still needed for add member, potentially for the dropdown icon
 } from "react-icons/fa";
 
 const GroupDetails = () => {
@@ -346,7 +344,7 @@ const GroupDetails = () => {
     time: new Date().toTimeString().slice(0, 5), // Default to current time
   });
   const [splitBetween, setSplitBetween] = useState([]); // Stores member _ids
-  const [showSplitDropdown, setShowSplitDropdown] = useState(false); // <--- THIS IS THE MISSING STATE!
+  const [showSplitDropdown, setShowSplitDropdown] = useState(false);
 
   const [groupExpenses, setGroupExpenses] = useState([]);
 
@@ -356,6 +354,9 @@ const GroupDetails = () => {
 
   const splitDropdownRef = useRef(null); // Ref for click outside dropdown
 
+  // State for the new Group Members dropdown
+  const [selectedDisplayMember, setSelectedDisplayMember] = useState("");
+
   // --- Initial Data Fetching (Group Details & Expenses) ---
   useEffect(() => {
     const fetchGroupData = async () => {
@@ -364,34 +365,49 @@ const GroupDetails = () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) {
-          setMessage({ type: "error", text: "Authentication required. Please log in." });
+          setMessage({
+            type: "error",
+            text: "Authentication required. Please log in.",
+          });
           navigate("/login");
           return;
         }
         const config = { headers: { Authorization: `Bearer ${token}` } };
 
         // Fetch group details (including name and members)
-        const groupResponse = await api.get(`/group/${groupId}`, config);
+        const groupResponse = await api.get(
+          `/group/${groupId}/members`,
+          config
+        );
         setGroupName(groupResponse.data.name || "Group Details");
         const members = groupResponse.data.members || [];
         setGroupMembers(members);
 
         // Pre-select all members for new expense split by default
         if (members.length > 0) {
-          setSplitBetween(members.map(m => m._id));
+          setSplitBetween(members.map((m) => m._id));
           // Set the first member as default for 'paidBy' if available
-          setExpenseData(prev => ({ ...prev, paidBy: members[0]._id }));
+          setExpenseData((prev) => ({ ...prev, paidBy: members[0]._id }));
+          // Set the first member as default for the new group members display dropdown
+          setSelectedDisplayMember(members[0]._id);
         }
 
         // Fetch group-specific expenses
-        const expensesResponse = await api.get(`/expenses/group/${groupId}`, config);
+        const expensesResponse = await api.get(
+          `/expenses/group/${groupId}`,
+          config
+        );
         setGroupExpenses(expensesResponse.data);
-
       } catch (err) {
         console.error("Failed to load group data", err.response || err);
-        setMessage({ type: "error", text: err.response?.data?.message || "Could not fetch group details or expenses." });
+        const errorMessage = err.response?.data?.message || "";
+        if (errorMessage) {
+          setMessage({ type: "error", text: errorMessage });
+        }
+
+        // Redirect to login if unauthorized
         if (err.response?.status === 401) {
-            navigate("/login"); // Redirect to login on unauthorized
+          navigate("/login");
         }
       } finally {
         setLoading(false);
@@ -404,7 +420,10 @@ const GroupDetails = () => {
   // --- Click outside dropdown handler ---
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (splitDropdownRef.current && !splitDropdownRef.current.contains(event.target)) {
+      if (
+        splitDropdownRef.current &&
+        !splitDropdownRef.current.contains(event.target)
+      ) {
         setShowSplitDropdown(false);
       }
     };
@@ -412,51 +431,77 @@ const GroupDetails = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []); // Run once on mount
 
+  // Function to determine display name for members (handles duplicates)
+  const getMemberDisplayName = (memberId) => {
+    const member = groupMembers.find((m) => m._id === memberId);
+    if (!member) return "Unknown";
+
+    const sameNameCount = groupMembers.filter(
+      (m) => m.name === member.name
+    ).length;
+    return sameNameCount > 1
+      ? `${member.name} (${member.username})`
+      : member.name;
+  };
+
   // --- Member Management ---
   const handleAddMember = async () => {
-  if (!newMemberUsername.trim()) {
-    setMessage({ type: "error", text: "Please enter a username to add." });
-    return;
-  }
-
-  setSubmitting(true);
-  setMessage({ type: "", text: "" }); // Clear previous messages
-
-  try {
-    const token = localStorage.getItem("token");
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-
-    const response = await api.put(
-      `/group/${groupId}/add-member`,
-      { username: newMemberUsername },
-      config
-    );
-
-    // ✅ Access updated members safely from the response
-    const updatedMembers = response?.data?.group?.members || [];
-
-    setGroupMembers(updatedMembers); // Update the members state
-    setNewMemberUsername("");
-    setMessage({ type: "success", text: response.data.message || "Member added successfully!" });
-
-    // ✅ Update splitBetween and paidBy fields if needed
-    setSplitBetween(updatedMembers.map(m => m._id));
-
-    if (!expenseData.paidBy && updatedMembers.length > 0) {
-      setExpenseData(prev => ({ ...prev, paidBy: updatedMembers[0]._id }));
+    if (!newMemberUsername.trim()) {
+      setMessage({ type: "error", text: "Please enter a username to add." });
+      return;
     }
 
-  } catch (err) {
-    console.error("Error adding member:", err.response || err);
-    setMessage({
-      type: "error",
-      text: err.response?.data?.error || "Failed to add member."
-    });
-  } finally {
-    setSubmitting(false);
-  }
-};
+    setSubmitting(true);
+    setMessage({ type: "", text: "" }); // Clear previous messages
 
+    try {
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
+      // Step 1: Add member to group
+      const addResponse = await api.put(
+        `/group/${groupId}/add-member`,
+        { username: newMemberUsername },
+        config
+      );
+
+      // Step 2: Fetch full user details by username
+      const userResponse = await api.get(
+        `/users/username/${newMemberUsername}`,
+        config
+      );
+      const newUser = userResponse.data;
+
+      // Step 3: Update members list in UI
+      setGroupMembers((prev) => {
+        const updatedMembers = [...prev, newUser];
+        // If it's the first member added, set them as selected for display
+        if (prev.length === 0) {
+            setSelectedDisplayMember(newUser._id);
+        }
+        return updatedMembers;
+      });
+
+      // Step 4: Update splitBetween
+      setSplitBetween((prev) => [...prev, newUser._id]);
+
+      // Step 5: If no paidBy is set, assign this one
+      if (!expenseData.paidBy) {
+        setExpenseData((prev) => ({ ...prev, paidBy: newUser._id }));
+      }
+
+      setNewMemberUsername("");
+      setMessage({ type: "success", text: "Member added successfully!" });
+    } catch (err) {
+      console.error("Error adding member:", err.response || err);
+      setMessage({
+        type: "error",
+        text: err.response?.data?.error || "Failed to add member.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // --- Expense Form Handlers ---
   const handleExpenseInputChange = (e) => {
@@ -474,14 +519,34 @@ const GroupDetails = () => {
 
   const handleExpenseFormSubmit = async (e) => {
     e.preventDefault();
-    // Basic client-side validation for expense form
-    if (!expenseData.amount || !expenseData.description || !expenseData.category || !expenseData.paidBy || !expenseData.date || !expenseData.time || splitBetween.length === 0) {
-        setMessage({ type: "error", text: "Please fill all required expense fields and select at least one person to split with." });
-        return;
+
+    // Basic client-side validation
+    if (
+      !expenseData.amount ||
+      !expenseData.description ||
+      !expenseData.category ||
+      !expenseData.paidBy ||
+      !expenseData.date ||
+      !expenseData.time ||
+      !Array.isArray(splitBetween) ||
+      splitBetween.length === 0
+    ) {
+      setMessage({
+        type: "error",
+        text: "Please fill all required expense fields and select at least one person to split with.",
+      });
+      return;
     }
-    if (isNaN(parseFloat(expenseData.amount)) || parseFloat(expenseData.amount) <= 0) {
-        setMessage({ type: "error", text: "Amount must be a positive number." });
-        return;
+
+    if (
+      isNaN(parseFloat(expenseData.amount)) ||
+      parseFloat(expenseData.amount) <= 0
+    ) {
+      setMessage({
+        type: "error",
+        text: "Amount must be a positive number.",
+      });
+      return;
     }
 
     setSubmitting(true);
@@ -489,33 +554,46 @@ const GroupDetails = () => {
 
     const payload = {
       ...expenseData,
-      amount: parseFloat(expenseData.amount), // Ensure amount is number
-      paidBy: expenseData.paidBy, // This should be the member's ID
-      splitBetween: splitBetween, // Array of member IDs
+      amount: parseFloat(expenseData.amount),
+      paidBy: expenseData.paidBy,
+      splitBetween: splitBetween,
       groupId,
     };
 
     try {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const response = await api.post("/expenses", payload, config);
-      setGroupExpenses((prev) => [response.data, ...prev]); // Add new expense to top of list
+
+      const response = await api.post("/expense/add", payload, config);
+
+      // Update UI
+      setGroupExpenses((prev) => [response.data, ...prev]);
       setMessage({ type: "success", text: "Expense added successfully!" });
-      // Reset form fields
+
+      // Reset form
+      const defaultPaidBy = groupMembers?.[0]?._id || "";
+      const defaultSplitBetween = Array.isArray(groupMembers)
+        ? groupMembers.map((m) => m._id)
+        : [];
+
       setExpenseData({
         amount: "",
         description: "",
         category: "",
-        paidBy: groupMembers.length > 0 ? groupMembers[0]._id : "", // Reset paidBy to first member or empty
+        paidBy: defaultPaidBy,
         date: new Date().toISOString().slice(0, 10),
         time: new Date().toTimeString().slice(0, 5),
       });
-      setSplitBetween(groupMembers.map(m => m._id)); // Reset split to all members
-      setShowExpenseForm(false); // Close the form
-      setShowSplitDropdown(false); // Close the dropdown as well
+
+      setSplitBetween(defaultSplitBetween);
+      setShowExpenseForm(false);
+      setShowSplitDropdown(false);
     } catch (err) {
       console.error("Error submitting expense:", err.response || err);
-      setMessage({ type: "error", text: err.response?.data?.message || "Failed to add expense." });
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Failed to add expense.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -554,7 +632,7 @@ const GroupDetails = () => {
             <div className="flex gap-3 mt-4 md:mt-0">
               <button
                 // onClick={() => navigate(`/group/${groupId}/settle`)}
-                onClick={()=> navigate('/settleup')}
+                onClick={() => navigate("/settleup")}
                 className="px-6 py-2 bg-yellow-600 text-white rounded-lg shadow-md hover:bg-yellow-700 transition duration-300 transform hover:scale-105 flex items-center space-x-2"
               >
                 <FaHandshake className="text-xl" />
@@ -592,7 +670,9 @@ const GroupDetails = () => {
               className="bg-gray-800 rounded-2xl shadow-2xl p-8 text-gray-100 w-full max-w-lg border border-gray-700 transform scale-95 animate-scale-in max-h-[90vh] overflow-y-auto custom-scrollbar"
             >
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-3xl font-bold text-blue-400">Add New Expense</h3>
+                <h3 className="text-3xl font-bold text-blue-400">
+                  Add New Expense
+                </h3>
                 <button
                   type="button"
                   onClick={() => {
@@ -647,7 +727,16 @@ const GroupDetails = () => {
                     required
                   >
                     <option value="">Select Category</option>
-                    {["Food", "Travel", "Entertainment", "Utilities", "Rent", "Groceries", "Shopping", "Others"].map((c) => (
+                    {[
+                      "Food",
+                      "Travel",
+                      "Entertainment",
+                      "Utilities",
+                      "Rent",
+                      "Groceries",
+                      "Shopping",
+                      "Others",
+                    ].map((c) => (
                       <option key={c} value={c}>
                         {c}
                       </option>
@@ -699,7 +788,10 @@ const GroupDetails = () => {
               </div>
 
               {/* Split Between Dropdown */}
-              <div className="split-dropdown relative mb-6" ref={splitDropdownRef}>
+              <div
+                className="split-dropdown relative mb-6"
+                ref={splitDropdownRef}
+              >
                 <button
                   type="button"
                   onClick={() => setShowSplitDropdown(!showSplitDropdown)}
@@ -714,23 +806,30 @@ const GroupDetails = () => {
                   </span>
                   <span className="text-gray-400">▼</span>
                 </button>
+
                 {showSplitDropdown && (
                   <div className="absolute z-10 mt-2 w-full bg-gray-700 border border-gray-600 rounded-lg shadow-xl max-h-48 overflow-y-auto custom-scrollbar">
-                    {groupMembers.map((m) => (
-                      <label
-                        key={m._id}
-                        className="flex items-center px-4 py-3 hover:bg-gray-600 cursor-pointer transition"
-                      >
-                        <input
-                          type="checkbox"
-                          value={m._id}
-                          checked={splitBetween.includes(m._id)}
-                          onChange={() => handleSplitBetweenChange(m._id)}
-                          className="mr-3 h-5 w-5 text-blue-500 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-offset-gray-800"
-                        />
-                        {m.username}
-                      </label>
-                    ))}
+                    {Array.isArray(groupMembers) && groupMembers.length > 0 ? (
+                      groupMembers.map((m) => (
+                        <label
+                          key={m._id}
+                          className="flex items-center px-4 py-3 hover:bg-gray-600 cursor-pointer transition"
+                        >
+                          <input
+                            type="checkbox"
+                            value={m._id}
+                            checked={splitBetween.includes(m._id)}
+                            onChange={() => handleSplitBetweenChange(m._id)}
+                            className="mr-3 h-5 w-5 text-blue-500 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-offset-gray-800"
+                          />
+                          {m.username}
+                        </label>
+                      ))
+                    ) : (
+                      <p className="text-gray-400 px-4 py-3">
+                        No members found.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -753,45 +852,72 @@ const GroupDetails = () => {
                   disabled={submitting}
                   className="px-8 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:from-green-600 hover:to-teal-700 transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
-                  {submitting ? <FaSpinner className="animate-spin mr-2" /> : "Add Expense"}
+                  {submitting ? (
+                    <FaSpinner className="animate-spin mr-2" />
+                  ) : (
+                    "Add Expense"
+                  )}
                 </button>
               </div>
             </form>
           </div>
         )}
 
-        {/* Group Members Section */}
-        <div className="bg-gray-800 rounded-2xl shadow-xl p-8 mb-8 border border-gray-700">
-            <h2 className="text-3xl font-bold mb-6 text-blue-400 flex items-center space-x-3">
-                <FaUsers className="text-3xl" />
-                <span>Group Members</span>
-            </h2>
+        {/* Group Members List as a single dropdown */}
+        <div className="bg-gray-800 rounded-2xl shadow-xl p-6 mb-8 border border-gray-700">
+            <div className="flex items-center space-x-3 pb-4 border-b border-gray-700 mb-4">
+                <FaUsers className="text-blue-400 text-3xl" />
+                <h2 className="text-blue-400 text-2xl font-semibold">Group Members</h2>
+            </div>
             {loading ? (
                 <div className="flex justify-center items-center py-8">
                     <FaSpinner className="animate-spin text-blue-500 text-4xl" />
                     <p className="ml-4 text-gray-400">Loading members...</p>
                 </div>
             ) : groupMembers.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {groupMembers.map((member) => (
-                        <div key={member._id} className="bg-gray-700 p-4 rounded-lg shadow flex items-center space-x-3">
-                            <FaUserCircle className="text-teal-400 text-3xl" />
-                            <span className="text-lg font-medium">{member.username}</span>
+                <div className="relative">
+                    <select
+                        value={selectedDisplayMember}
+                        onChange={(e) => setSelectedDisplayMember(e.target.value)}
+                        className="block w-full px-4 py-3 bg-gray-700 text-gray-100 rounded-lg border border-gray-600 focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+                    >
+                        <option value="">Select a member to view</option>
+                        {groupMembers.map((member) => (
+                            <option key={member._id} value={member._id}>
+                                {getMemberDisplayName(member._id)}
+                            </option>
+                        ))}
+                    </select>
+                    {/* Display info for the selected member (optional, but makes dropdown useful) */}
+                    {selectedDisplayMember && (
+                        <div className="mt-4 p-4 bg-gray-700 border border-gray-600 rounded-lg">
+                            <p className="text-gray-300 text-lg">
+                                <span className="font-semibold">Selected:</span>{" "}
+                                {getMemberDisplayName(selectedDisplayMember)}
+                                {groupMembers.find(m => m._id === selectedDisplayMember)?.email && (
+                                    <span className="text-sm text-gray-400 block">
+                                        Email: {groupMembers.find(m => m._id === selectedDisplayMember).email}
+                                    </span>
+                                )}
+                            </p>
                         </div>
-                    ))}
+                    )}
                 </div>
             ) : (
-                <p className="text-gray-400 text-lg text-center py-4">No members in this group yet. Add one above!</p>
+                <p className="text-gray-400 text-lg text-center py-4">
+                    No members in this group yet. Add one above!
+                </p>
             )}
         </div>
 
 
-        {/* Expenses List */}
+        {/* Expenses List - ADDED LINE/BORDER */}
         <div className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700">
-          <h2 className="text-3xl font-bold mb-6 text-blue-400 flex items-center space-x-3">
-            <FaMoneyBillWave className="text-3xl" />
-            <span>Group Expenses</span>
-          </h2>
+          {/* New line/border and title for Group Expenses */}
+          <div className="flex items-center space-x-3 pb-4 border-b border-gray-700 mb-4">
+            <FaMoneyBillWave className="text-blue-400 text-3xl" /> {/* Icon */}
+            <h2 className="text-blue-400 text-2xl font-semibold">Group Expenses</h2> {/* Title */}
+          </div>
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <FaSpinner className="animate-spin text-blue-500 text-4xl" />
@@ -816,8 +942,9 @@ const GroupDetails = () => {
                       <p className="text-sm text-gray-400 mt-1 flex items-center">
                         <FaUserPlus className="mr-1 text-xs" /> Paid by:{" "}
                         <span className="font-medium text-teal-300">
-                            {/* Find the member by ID to display username */}
-                            {groupMembers.find(m => m._id === expense.paidBy)?.username || 'Unknown'}
+                          {/* Find the member by ID to display username */}
+                          {groupMembers.find((m) => m._id === expense.paidBy)
+                            ?.username || "Unknown"}
                         </span>
                       </p>
                       <p className="text-xs text-gray-500 mt-1 flex items-center">
@@ -831,12 +958,17 @@ const GroupDetails = () => {
                         {expense.time}
                       </p>
                       <p className="text-xs text-gray-400 mt-2">
-                          Split between: <span className="font-medium text-purple-300">
+                        Split between:{" "}
+                        <span className="font-medium text-purple-300">
                           {/* Map splitBetween IDs to usernames */}
-                          {expense.splitBetween.map(memberId =>
-                              groupMembers.find(m => m._id === memberId)?.username || 'Unknown'
-                          ).join(', ')}
-                          </span>
+                          {expense.splitBetween
+                            .map(
+                              (memberId) =>
+                                groupMembers.find((m) => m._id === memberId)
+                                  ?.username || "Unknown"
+                            )
+                            .join(", ")}
+                        </span>
                       </p>
                     </div>
                     <div className="flex items-center mt-3 sm:mt-0">
@@ -849,7 +981,9 @@ const GroupDetails = () => {
               ))}
             </ul>
           ) : (
-            <p className="text-gray-400 text-lg text-center py-4">No expenses recorded for this group yet. Add one above!</p>
+            <p className="text-gray-400 text-lg text-center py-4">
+              No expenses recorded for this group yet. Add one above!
+            </p>
           )}
         </div>
       </div>
