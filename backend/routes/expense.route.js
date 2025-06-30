@@ -4,27 +4,21 @@ const Group = require('./../models/group.model');
 const Expense = require('./../models/expense.model');
 const { jwtAuthMiddleware } = require('./../jwt');
 
-
-
-
-
 //adding the expense
 router.post('/add', jwtAuthMiddleware, async (req, res) => {
   try {
     const { groupId, amount, description, category, paidBy, splitBetween } = req.body;
 
-    console.log("Incoming expense data:", req.body);
-
     if (!groupId || !description || !amount || !paidBy || !splitBetween?.length) {
       return res.status(400).json({ message: 'Missing fields' });
     }
 
-    const groupDoc = await Group.findById(groupId);
+    // Get full Mongoose document (not lean)
+    const groupDoc = await Group.findById(groupId); // ✅ Don't use .lean() here
     if (!groupDoc) {
       return res.status(404).json({ message: 'Group not found' });
     }
 
-    // Compare ObjectIds properly
     const isPaidByValid = groupDoc.members.some(m => m.equals(paidBy));
     const allSplitValid = splitBetween.every(uid =>
       groupDoc.members.some(m => m.equals(uid))
@@ -45,7 +39,10 @@ router.post('/add', jwtAuthMiddleware, async (req, res) => {
 
     await expense.save();
 
-    groupDoc.expenses.push(expense._id);
+    // ✅ Safely push expense ID and save the group
+    groupDoc.expenses = groupDoc.expenses || [];
+    groupDoc.expenses.push(expense.id);
+
     await groupDoc.save();
 
     res.status(201).json({ message: 'Expense added and group updated successfully', expense });
@@ -55,6 +52,31 @@ router.post('/add', jwtAuthMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+
+
+
+//geting the expenses
+
+router.get('/:groupId', jwtAuthMiddleware, async (req, res) => {
+  try {
+    const groupId = req.params.groupId;
+
+    if (!groupId) {
+      return res.status(400).json({ message: 'Group ID is required' });
+    }
+
+    const expenses = await Expense.find({ group: groupId })
+      .sort({ createdAt: -1 }) // optional: latest first
+      
+
+    res.status(200).json(expenses);
+  } catch (err) {
+    console.error('Error fetching group expenses:', err);
+    res.status(500).json({ message: 'Server error while fetching expenses' });
+  }
+});
+
 
 
 //deleting the expense

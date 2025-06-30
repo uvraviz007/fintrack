@@ -49,70 +49,65 @@ const GroupDetails = () => {
   const [selectedDisplayMember, setSelectedDisplayMember] = useState("");
 
   // --- Initial Data Fetching (Group Details & Expenses) ---
-  useEffect(() => {
-    const fetchGroupData = async () => {
-      setLoading(true);
-      setMessage({ type: "", text: "" }); // Clear messages on fetch
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setMessage({
-            type: "error",
-            text: "Authentication required. Please log in.",
-          });
-          navigate("/login");
-          return;
-        }
-        // Corrected template literal for Authorization header
-        const config = { headers: { Authorization: `Bearer ${token}` } };
+  // --- Initial Data Fetching (Group Details & Expenses) ---
+useEffect(() => {
+  const fetchGroupData = async () => {
+    setLoading(true);
+    setMessage({ type: "", text: "" });
 
-        // Fetch group details (including name and members)
-        const groupResponse = await api.get(
-          `/group/${groupId}/members`,
-          config
-        );
-        setGroupName(groupResponse.data.name || "Group Details");
-        const members = groupResponse.data.members || [];
-        setGroupMembers(members);
-
-        // Pre-select all members for new expense split by default
-        if (members.length > 0) {
-          setSplitBetween(members.map((m) => m._id));
-          // Set the first member as default for 'paidBy' if available
-          setExpenseData((prev) => ({ ...prev, paidBy: members[0]._id }));
-          // Set the first member as default for the new group members display dropdown
-          setSelectedDisplayMember(members[0]._id);
-        } else {
-          // If no members, ensure paidBy and splitBetween are empty
-          setExpenseData((prev) => ({ ...prev, paidBy: "" }));
-          setSplitBetween([]);
-          setSelectedDisplayMember("");
-        }
-
-        // Fetch group-specific expenses
-        const expensesResponse = await api.get(
-          `/expenses/group/${groupId}`,
-          config
-        );
-        setGroupExpenses(expensesResponse.data);
-      } catch (err) {
-        console.error("Failed to load group data", err.response || err);
-        const errorMessage =
-          err.response?.data?.message || "Failed to load group data.";
-        setMessage({ type: "error", text: errorMessage });
-
-        // Redirect to login if unauthorized
-        if (err.response?.status === 401) {
-          navigate("/login");
-        }
-      } finally {
-        setLoading(false);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setMessage({
+          type: "error",
+          text: "Authentication required. Please log in.",
+        });
+        navigate("/login");
+        return;
       }
-    };
+      const config = { headers: { Authorization: `Bearer ${token}` } };
 
-    fetchGroupData();
-  }, [groupId, navigate]); // Depend on groupId and navigate
+      // Fetch group details (including name and members)
+      const groupResponse = await api.get(
+        `/group/${groupId}/members`, // Assuming this route remains the same for group members
+        config
+      );
+      setGroupName(groupResponse.data.name || "Group Details");
+      const members = groupResponse.data.members || [];
+      setGroupMembers(members);
 
+      if (members.length > 0) {
+        setSplitBetween(members.map((m) => m._id));
+        setExpenseData((prev) => ({ ...prev, paidBy: members[0]._id }));
+        setSelectedDisplayMember(members[0]._id);
+      } else {
+        setExpenseData((prev) => ({ ...prev, paidBy: "" }));
+        setSplitBetween([]);
+        setSelectedDisplayMember("");
+      }
+
+      // 🔴 IMPORTANT CHANGE HERE: Update the route to match your backend
+      const expensesResponse = await api.get(
+        `/expense/${groupId}`, // Changed from `/expenses/group/${groupId}`
+        config
+      );
+      setGroupExpenses(expensesResponse.data);
+    } catch (err) {
+      console.error("Failed to load group data", err.response || err);
+      const errorMessage =
+        err.response?.data?.message || "Failed to load group data.";
+      setMessage({ type: "error", text: errorMessage });
+
+      if (err.response?.status === 401) {
+        navigate("/login");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchGroupData();
+}, [groupId, navigate]);
   // --- Click outside dropdown handler ---
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -440,10 +435,6 @@ const GroupDetails = () => {
                       "Food",
                       "Travel",
                       "Entertainment",
-                      "Utilities",
-                      "Rent",
-                      "Groceries",
-                      "Shopping",
                       "Others",
                     ].map((c) => (
                       <option key={c} value={c}>
