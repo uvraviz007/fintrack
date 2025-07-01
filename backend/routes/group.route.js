@@ -304,5 +304,73 @@ router.put('/:groupId/join', jwtAuthMiddleware, async (req, res) => {
   }
 });
 
+// --- SETTLE UP: Groupwise user settlement ---
+router.get('/:groupId/settle', jwtAuthMiddleware, async (req, res) => {
+  try {
+    const groupId = req.params.groupId;
+    const userId = req.user.id;
+
+    // Fetch group and its members
+    const group = await Group.findById(groupId).populate('members', 'username name email');
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    // Fetch all expenses for this group
+    const expenses = await Expense.find({ group: groupId });
+
+    // Prepare balances: { userId: { [otherUserId]: netAmount } }
+    const balances = {};
+    group.members.forEach(m => {
+      balances[m._id.toString()] = {};
+    });
+
+    // For each expense, update balances
+    expenses.forEach(exp => {
+      const paidBy = exp.paidBy.toString();
+      const splitUsers = exp.splitBetween.map(u => u.toString());
+      let splitMap = {};
+      if (exp.splitAmount && exp.splitAmount.size > 0) {
+        // Custom split
+        splitUsers.forEach(uid => {
+          splitMap[uid] = exp.splitAmount.get(uid) || 0;
+        });
+      } else {
+        // Equal split
+        const share = exp.amount / splitUsers.length;
+        splitUsers.forEach(uid => {
+          splitMap[uid] = share;
+        });
+      }
+      splitUsers.forEach(uid => {
+        if (uid === paidBy) return; // Don't owe to self
+        // uid owes paidBy
+        if (!balances[uid][paidBy]) balances[uid][paidBy] = 0;
+        if (!balances[paidBy][uid]) balances[paidBy][uid] = 0;
+        balances[uid][paidBy] += splitMap[uid];
+        balances[paidBy][uid] -= splitMap[uid];
+      });
+    });
+
+    // Prepare toPay and toReceive for the current user
+    const toPay = [];
+    const toReceive = [];
+    const userBalances = balances[userId] || {};
+    for (const [otherId, amount] of Object.entries(userBalances)) {
+      if (amount > 0.01) { // Owes to otherId
+        const receiver = group.members.find(m => m._id.toString() === otherId);
+        toPay.push({ amount: amount, receiver });
+      } else if (amount < -0.01) { // Should receive from otherId
+        const payer = group.members.find(m => m._id.toString() === otherId);
+        toReceive.push({ amount: -amount, payer });
+      }
+    }
+
+    res.status(200).json({ toPay, toReceive });
+  } catch (err) {
+    console.error('Error in group settle:', err);
+    res.status(500).json({ message: 'Server error in settlement calculation' });
+  }
+});
 
 module.exports = router;

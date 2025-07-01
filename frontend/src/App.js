@@ -26,7 +26,7 @@ function App() {
         <Route path="/profile" element={<Profile/>}/>
         <Route path="/groups" element={<Groups/>}/>
         <Route path="/groupdetails/:groupId" element={<GroupDetails/>}/>
-        <Route path="/settleup" element={<SettleUp/>}/>
+        <Route path="/settleup/:groupId" element={<SettleUp/>}/>
       </Routes>
     </Router>
   );
