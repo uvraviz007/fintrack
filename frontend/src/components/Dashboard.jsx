@@ -456,7 +456,7 @@ function Dashboard() {
       <div className="w-64 bg-gray-800 rounded-3xl shadow-2xl p-8 text-white mr-10 flex flex-col items-center justify-between border border-gray-700 h-[calc(100vh-64px)] sticky top-8">
         <div> {/* This div keeps the FinTrack title and nav items grouped at the top */}
           <h2 className="text-4xl font-extrabold text-center mb-10 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 tracking-wide">
-            FinTrack
+            FriendFunds
           </h2>
           <ul className="space-y-6 text-xl font-medium">
             <li
