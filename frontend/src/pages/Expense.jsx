@@ -230,16 +230,12 @@ function Expense() {
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
             >
-              <option value="">All Categories</option>
+              
               {/* Dynamically render categories if available, or keep static */}
               <option value="Food">Food</option>
               <option value="Travel">Travel</option>
               <option value="Entertainment">Entertainment</option>
-              <option value="Shopping">Shopping</option>
-              <option value="Utilities">Utilities</option>
-              <option value="Rent">Rent</option>
-              <option value="Healthcare">Healthcare</option>
-              <option value="Education">Education</option>
+              
               <option value="Others">Others</option>
             </select>
           </div>

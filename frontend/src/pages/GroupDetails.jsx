@@ -21,7 +21,7 @@ const GroupDetails = () => {
   const { groupId } = useParams();
   const navigate = useNavigate();
 
-  const [groupName, setGroupName] = useState("Loading Group...");
+  const [groupName, setGroupName] = useState("");
   const [groupMembers, setGroupMembers] = useState([]);
   const [newMemberUsername, setNewMemberUsername] = useState("");
 
@@ -73,6 +73,8 @@ useEffect(() => {
         config
       );
       setGroupName(groupResponse.data.name || "Group Details");
+      
+      
       const members = groupResponse.data.members || [];
       setGroupMembers(members);
 
