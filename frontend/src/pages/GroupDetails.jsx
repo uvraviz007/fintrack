@@ -72,7 +72,7 @@ useEffect(() => {
         `/group/${groupId}/members`, // Assuming this route remains the same for group members
         config
       );
-      setGroupName(groupResponse.data.name || "xxxxxxx");
+      setGroupName(groupResponse.data.name || "Group Details");
       
       
       const members = groupResponse.data.members || [];
