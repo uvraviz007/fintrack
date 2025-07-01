@@ -338,7 +338,7 @@ useEffect(() => {
             {/* Action Buttons */}
             <div className="flex gap-3 mt-4 md:mt-0">
               <button
-                onClick={() => navigate(`/settleup`)} // Ensure this path is correct if it's dynamic later
+                onClick={() => navigate(`/settleup/${groupId}`)}
                 className="px-6 py-2 bg-yellow-600 text-white rounded-lg shadow-md hover:bg-yellow-700 transition duration-300 transform hover:scale-105 flex items-center space-x-2"
               >
                 <FaHandshake className="text-xl" />

@@ -100,30 +100,11 @@ const SettleUp = () => {
   const { groupId } = useParams();
   const navigate = useNavigate();
 
-  // --- EXAMPLE DATA ---
-  // This data directly populates the state for demonstration purposes.
-  // In a real application, this would come from your backend API call.
-  const exampleToPay = [
-    { _id: 'pay_tx1', amount: 550.75, receiver: { _id: 'userA', username: 'Alice Smith' } },
-    { _id: 'pay_tx2', amount: 120.00, receiver: { _id: 'userB', username: 'Bob Johnson' } },
-    { _id: 'pay_tx3', amount: 30.50, receiver: { _id: 'userC', username: 'Charlie Brown' } },
-  ];
-
-  const exampleToReceive = [
-    { _id: 'receive_tx1', amount: 700.00, payer: { _id: 'userD', username: 'David Lee' } },
-    { _id: 'receive_tx2', amount: 180.25, payer: { _id: 'userE', username: 'Eva Green' } },
-  ];
-  // --- END EXAMPLE DATA ---
-
-
-  const [toPay, setToPay] = useState(exampleToPay);
-  const [toReceive, setToReceive] = useState(exampleToReceive);
-  const [loading, setLoading] = useState(false); // Set to false since data is pre-filled
+  const [toPay, setToPay] = useState([]);
+  const [toReceive, setToReceive] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  // The useEffect for API calls is commented out since we're using example data.
-  // Uncomment and re-implement this once your backend endpoint is ready!
-  /*
   useEffect(() => {
     const fetchSettlementData = async () => {
       setLoading(true);
@@ -135,16 +116,12 @@ const SettleUp = () => {
           navigate('/login');
           return;
         }
-
         const config = {
           headers: { Authorization: `Bearer ${token}` },
         };
-
         const response = await api.get(`/group/${groupId}/settle`, config);
-        
         setToPay(response.data.toPay || []);
         setToReceive(response.data.toReceive || []);
-
       } catch (err) {
         console.error('Error fetching settlement data:', err.response || err);
         setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to fetch settlement data. Please try again.' });
@@ -156,10 +133,8 @@ const SettleUp = () => {
         setLoading(false);
       }
     };
-
     fetchSettlementData();
   }, [groupId, navigate]);
-  */
 
   return (
     <DashboardLayout>
