@@ -1,8 +1,11 @@
 const express = require('express');
+const mongoose = require('mongoose'); // ✅ Add this
 const router = express.Router();
 const Group = require('./../models/group.model');
 const Expense = require('./../models/expense.model');
+const User = require('./../models/user.model');
 const { jwtAuthMiddleware } = require('./../jwt');
+// const { jwtAuthMiddleware } = require('./../jwt');
 
 //adding the expense
 router.post('/add', jwtAuthMiddleware, async (req, res) => {
@@ -150,6 +153,32 @@ router.put('/update/:expenseId', jwtAuthMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+
+//get expense of a member
+// get expense of a member
+router.get("/member/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: "Invalid User ID" });
+  }
+
+  try {
+    const expenses = await Expense.find({
+      $or: [
+        { paidBy: userId },
+        { splitBetween: userId } // ✅ match schema field
+      ]
+    });
+
+    res.status(200).json(expenses);
+  } catch (error) {
+    console.error("❌ Error fetching user's expenses:", error);
+    res.status(500).json({ error: "Server error while fetching expenses" });
+  }
+});
+
 
 
 
