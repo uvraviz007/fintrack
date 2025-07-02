@@ -155,7 +155,7 @@ router.put('/update/:expenseId', jwtAuthMiddleware, async (req, res) => {
 });
 
 
-//get expense of a member
+
 // get expense of a member
 router.get("/member/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -178,6 +178,28 @@ router.get("/member/:userId", async (req, res) => {
     res.status(500).json({ error: "Server error while fetching expenses" });
   }
 });
+// router.get("/member", jwtAuthMiddleware, async (req, res) => {
+//   const userId = req.user.id; // ✅ User ID from decoded JWT
+
+//   if (!mongoose.Types.ObjectId.isValid(userId)) {
+//     return res.status(400).json({ error: "Invalid User ID from token" });
+//   }
+
+//   try {
+//     const expenses = await Expense.find({
+//       $or: [
+//         { paidBy: userId },
+//         { splitBetween: userId }
+//       ]
+//     });
+
+//     res.status(200).json(expenses);
+//   } catch (error) {
+//     console.error("❌ Error fetching user's expenses:", error);
+//     res.status(500).json({ error: "Server error while fetching expenses" });
+//   }
+// });
+
 
 
 

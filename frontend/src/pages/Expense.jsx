@@ -1,153 +1,15 @@
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import DashboardLayout from '../components/DashboardLayout';
-
-// function Expense() {
-//   const [expenses, setExpenses] = useState([]);
-//   const [filter, setFilter] = useState('');
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [sortOption, setSortOption] = useState('date');
-
-//   useEffect(() => {
-//     const fetchExpenses = async () => {
-//       try {
-//         const token = localStorage.getItem('token');
-//         if (!token) {
-//           console.error('No token found. Please log in.');
-//           return;
-//         }
-
-//         const config = {
-//           headers: { Authorization: `Bearer ${token}` },
-//         };
-
-//         const response = await axios.get('/expenses', config);
-//         setExpenses(response.data);
-//       } catch (error) {
-//         console.error('Error fetching expenses:', error);
-//       }
-//     };
-
-//     fetchExpenses();
-//   }, []);
-
-//   const filteredExpenses = expenses
-//     .filter((expense) => (filter ? expense.category === filter : true))
-//     .filter((expense) =>
-//       searchTerm
-//         ? expense.description.toLowerCase().includes(searchTerm.toLowerCase())
-//         : true
-//     )
-//     .sort((a, b) =>
-//       sortOption === 'date'
-//         ? new Date(b.date) - new Date(a.date)
-//         : b.amount - a.amount
-//     );
-
-//   return (
-//     <DashboardLayout>
-//       <div className="min-h-screen bg-gradient-to-tr from-slate-800 via-slate-700 to-slate-600 p-8 text-white font-sans">
-//         <h1 className="text-5xl font-extrabold mb-8 tracking-tight underline decoration-blue-500">
-//           Expense Management
-//         </h1>
-
-//         {/* Labels above colored boxes with same background */}
-//         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
-//           <div className="text-sm font-semibold text-white">Search</div>
-//           <div className="text-sm font-semibold text-white">Category</div>
-//           <div className="text-sm font-semibold text-white">Sort By</div>
-//         </div>
-
-//         {/* Colored Input Boxes */}
-//         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-//           {/* Search Box */}
-//            <input
-//               type="text"
-//               placeholder="Search expenses..."
-//               className="w-full px-4 py-2 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-white"
-//               value={searchTerm}
-//               onChange={(e) => setSearchTerm(e.target.value)}
-//             />
-          
-
-//           {/* Filter Box */}
-//            <select
-//               className="w-full px-4 py-2 text-black bg-violet-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-white"
-//               value={filter}
-//               onChange={(e) => setFilter(e.target.value)}
-//             >
-//               <option value="">All Categories</option>
-//               <option value="Food">Food</option>
-//               <option value="Travel">Travel</option>
-//               <option value="Entertainment">Entertainment</option>
-//               <option value="Others">Others</option>
-//             </select>
-          
-
-//           {/* Sort Box */}
-         
-//             <select
-//               className="w-full px-4 py-2 bg-teal-400 text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-white"
-//               value={sortOption}
-//               onChange={(e) => setSortOption(e.target.value)}
-//             >
-//               <option value="date">Date</option>
-//               <option value="amount">Amount</option>
-//             </select>
-          
-//         </div>
-
-//         {/* Expense List */}
-//         <div className="bg-white text-gray-900 rounded-2xl shadow-xl p-6">
-//           <h2 className="text-3xl font-bold mb-6 text-slate-800">Expense List</h2>
-//           {filteredExpenses.length > 0 ? (
-//             <ul className="space-y-4">
-//               {filteredExpenses.map((expense, index) => (
-//                 <li
-//                   key={index}
-//                   className="flex justify-between items-center border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-50"
-//                 >
-//                   <div>
-//                     <h3 className="text-xl font-semibold text-gray-800">
-//                       {expense.description}
-//                     </h3>
-//                     <p className="text-sm text-gray-600">
-//                       ₹{expense.amount} • {expense.category} • Paid by: {expense.paidBy}
-//                     </p>
-//                     <p className="text-xs text-gray-500 mt-1">
-//                       Date: {new Date(expense.date).toLocaleDateString()}
-//                     </p>
-//                   </div>
-//                   <button
-//                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-300"
-//                     onClick={() => alert('Delete functionality coming soon!')}
-//                   >
-//                     Delete
-//                   </button>
-//                 </li>
-//               ))}
-//             </ul>
-//           ) : (
-//             <p className="text-gray-500 text-lg">No expenses found.</p>
-//           )}
-//         </div>
-//       </div>
-//     </DashboardLayout>
-//   );
-// }
-
-// export default Expense;
-
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import DashboardLayout from '../components/DashboardLayout';
+import { FaSearch, FaFilter, FaSortAlphaDown, FaExclamationCircle } from 'react-icons/fa'; // Import icons
+import { jwtDecode } from 'jwt-decode'; // Import jwtDecode
+import { format, parseISO, isValid } from 'date-fns'; // Import date-fns functions
 
 function Expense() {
   const [expenses, setExpenses] = useState([]);
-  const [filter, setFilter] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortOption, setSortOption] = useState('date');
+  const [filter, setFilter] = useState(''); // Category filter
+  const [searchTerm, setSearchTerm] = useState(''); // Text search term
+  const [sortOption, setSortOption] = useState('date'); // Sort option: 'date' or 'amount'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -155,10 +17,30 @@ function Expense() {
     const fetchExpenses = async () => {
       try {
         setLoading(true);
+        setError(null); // Clear previous errors
         const token = localStorage.getItem('token');
+        let userID = null; // Initialize userID
+
         if (!token) {
           console.error('No token found. Please log in.');
           setError('Authentication required. Please log in.');
+          setLoading(false);
+          return;
+        }
+
+        try {
+          const decodedToken = jwtDecode(token);
+          // ASSUMPTION: Your JWT payload has a 'id' or 'userId' field
+          // Please check your actual JWT payload structure in developer tools
+          // (Application -> Local Storage -> token value, then paste it into jwt.io)
+          userID = decodedToken.id || decodedToken.userId || decodedToken.sub; // Try common keys
+          if (!userID) {
+            throw new Error("User ID not found in token payload.");
+          }
+          console.log("Extracted User ID from token:", userID);
+        } catch (decodeError) {
+          console.error('Error decoding token or User ID not found in token:', decodeError);
+          setError('Could not get user information. Please log in again.');
           setLoading(false);
           return;
         }
@@ -167,36 +49,53 @@ function Expense() {
           headers: { Authorization: `Bearer ${token}` },
         };
 
-        const response = await axios.get('/expenses', config);
+        // Updated API endpoint to use the extracted userID
+        const response = await axios.get(`http://localhost:5001/expense/member/${userID}`, config);
         setExpenses(response.data);
       } catch (err) {
         console.error('Error fetching expenses:', err);
-        setError('Failed to fetch expenses. Please try again.');
+        if (err.response && err.response.status === 401) {
+            setError('Unauthorized. Please log in again.');
+        } else {
+            setError('Failed to fetch expenses. Please try again.');
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchExpenses();
-  }, []);
+  }, []); // Empty dependency array means this runs once on component mount
 
   const filteredExpenses = expenses
-    .filter((expense) => (filter ? expense.category === filter : true))
+    .filter((expense) => (filter ? expense.category === filter : true)) // Apply category filter
     .filter((expense) =>
       searchTerm
         ? expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
           expense.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          expense.paidBy.toLowerCase().includes(searchTerm.toLowerCase())
+          (expense.paidBy && expense.paidBy.toLowerCase().includes(searchTerm.toLowerCase()))
         : true
     )
     .sort((a, b) => {
+      // Safely parse dates for sorting
+      const dateA = expenseDateToMs(a.date);
+      const dateB = expenseDateToMs(b.date);
+
       if (sortOption === 'date') {
-        return new Date(b.date) - new Date(a.date);
+        return dateB - dateA; // Newest first
       } else if (sortOption === 'amount') {
-        return b.amount - a.amount;
+        return b.amount - a.amount; // Highest amount first
       }
-      return 0; // Fallback
+      return 0; // Fallback for no sort option
     });
+
+    // Helper function to safely convert date string to milliseconds for sorting
+    function expenseDateToMs(dateString) {
+      if (!dateString) return 0;
+      const parsed = parseISO(dateString);
+      return isValid(parsed) ? parsed.getTime() : 0;
+    }
+
 
   return (
     <DashboardLayout>
@@ -209,49 +108,64 @@ function Expense() {
         {/* Filter and Sort Controls */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 p-6 bg-gray-800 rounded-xl shadow-lg border border-gray-700">
           {/* Search Input */}
-          <div className="flex flex-col">
+          <div className="flex flex-col relative">
             <label htmlFor="search" className="text-sm font-medium text-gray-300 mb-2">Search Expenses</label>
-            <input
-              id="search"
-              type="text"
-              placeholder="Search by description, category, or payer..."
-              className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 placeholder-gray-400 border border-gray-600"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <div className="relative">
+              <input
+                id="search"
+                type="text"
+                placeholder="Description, Category, Payer..."
+                className="w-full px-4 pl-10 py-3 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 placeholder-gray-400 border border-gray-600"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
           </div>
 
           {/* Category Filter */}
-          <div className="flex flex-col">
+          <div className="flex flex-col relative">
             <label htmlFor="category-filter" className="text-sm font-medium text-gray-300 mb-2">Filter by Category</label>
-            <select
-              id="category-filter"
-              className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-200 border border-gray-600 appearance-none cursor-pointer"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            >
-              
-              {/* Dynamically render categories if available, or keep static */}
-              <option value="Food">Food</option>
-              <option value="Travel">Travel</option>
-              <option value="Entertainment">Entertainment</option>
-              
-              <option value="Others">Others</option>
-            </select>
+            <div className="relative">
+              <select
+                id="category-filter"
+                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-200 border border-gray-600 appearance-none cursor-pointer pl-10"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+              >
+                <option value="">All Categories</option>
+                <option value="Food">Food</option>
+                <option value="Travel">Travel</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Others">Others</option>
+              </select>
+              <FaFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              {/* Custom arrow for select dropdown */}
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9z"/></svg>
+              </div>
+            </div>
           </div>
 
           {/* Sort By */}
-          <div className="flex flex-col">
+          <div className="flex flex-col relative">
             <label htmlFor="sort-option" className="text-sm font-medium text-gray-300 mb-2">Sort By</label>
-            <select
-              id="sort-option"
-              className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition duration-200 border border-gray-600 appearance-none cursor-pointer"
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
-            >
-              <option value="date">Date (Newest First)</option>
-              <option value="amount">Amount (Highest First)</option>
-            </select>
+            <div className="relative">
+              <select
+                id="sort-option"
+                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition duration-200 border border-gray-600 appearance-none cursor-pointer pl-10"
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+              >
+                <option value="date">Date (Newest First)</option>
+                <option value="amount">Amount (Highest First)</option>
+              </select>
+              <FaSortAlphaDown className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              {/* Custom arrow for select dropdown */}
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9z"/></svg>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -260,53 +174,66 @@ function Expense() {
           <h2 className="text-3xl font-bold mb-8 text-blue-300">Overview of Your Expenses</h2>
 
           {loading && (
-            <div className="flex justify-center items-center h-48">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-              <p className="ml-4 text-xl text-gray-400">Loading expenses...</p>
+            <div className="flex justify-center items-center h-48 flex-col">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+              <p className="text-xl text-gray-400">Loading expenses...</p>
             </div>
           )}
 
           {error && (
-            <div className="bg-red-800 text-white p-4 rounded-lg text-center">
+            <div className="bg-red-800 text-white p-4 rounded-lg text-center flex items-center justify-center gap-2">
+              <FaExclamationCircle className="text-2xl" />
               <p>{error}</p>
             </div>
           )}
 
           {!loading && !error && filteredExpenses.length > 0 ? (
             <ul className="space-y-4">
-              {filteredExpenses.map((expense, index) => (
-                <li
-                  key={expense._id || index} // Use _id if available, otherwise index (ensure unique keys)
-                  className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-700 rounded-xl p-5 hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] border border-gray-600"
-                >
-                  <div className="mb-3 sm:mb-0">
-                    <h3 className="text-xl font-semibold text-white mb-1">
-                      {expense.description}
-                    </h3>
-                    <p className="text-sm text-gray-300">
-                      <span className="font-medium text-yellow-300">Category:</span> {expense.category} • <span className="font-medium text-green-300">Paid by:</span> {expense.paidBy}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-2">
-                      Date: {new Date(expense.date).toLocaleDateString('en-IN', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
-                    <p className="text-2xl font-bold text-red-400 mr-4">
-                      ₹{expense.amount.toFixed(2)}
-                    </p>
-                    <button
-                      className="px-5 py-2 bg-gradient-to-r from-red-600 to-rose-700 text-white font-medium rounded-lg shadow-md hover:from-red-700 hover:to-rose-800 transition-all duration-300 transform hover:scale-105"
-                      onClick={() => alert('Delete functionality coming soon! (Expense ID: ' + (expense._id || 'N/A') + ')')}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </li>
-              ))}
+              {filteredExpenses.map((expense) => {
+                const averageAmount = (expense.members && expense.members.length > 0)
+                  ? (expense.amount / expense.members.length).toFixed(2)
+                  : expense.amount.toFixed(2); // If no members or empty, show total amount
+
+                // Safely parse and format the date
+                const expenseDate = expense.date ? parseISO(expense.date) : null;
+                const formattedDate = expenseDate && isValid(expenseDate)
+                  ? format(expenseDate, 'MMM d, yyyy') // e.g., "Jul 2, 2025"
+                  : 'Invalid Date'; // Fallback for invalid or missing dates
+
+                return (
+                  <li
+                    key={expense._id}
+                    className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-700 rounded-xl p-5 hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] border border-gray-600"
+                  >
+                    <div className="mb-3 sm:mb-0">
+                      <h3 className="text-xl font-semibold text-white mb-1">
+                        {expense.description}
+                      </h3>
+                      {/* Category and Paid By on new lines */}
+                      <p className="text-sm text-gray-300">
+                        <span className="font-medium text-yellow-300">Category:</span> {expense.category}
+                      </p>
+                      <p className="text-sm text-gray-300">
+                        <span className="font-medium text-green-300">Paid by:</span> {expense.paidBy}
+                      </p>
+                      {/* Displaying the number of members if available */}
+                      {expense.members && expense.members.length > 0 && (
+                        <p className="text-xs text-gray-400 mt-1">
+                            Members involved: {expense.members.length}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-2">
+                        Date: {formattedDate}
+                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
+                      <p className="text-2xl font-bold text-red-400 mr-4">
+                        ₹{averageAmount} {expense.members && expense.members.length > 0 && `(per person)`}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           ) : !loading && !error && (
             <div className="text-center py-10">
