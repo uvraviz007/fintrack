@@ -85,7 +85,7 @@ function DashboardLayout({ children }) {
             </li>
             <li
               className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer hover:bg-gray-700 hover:text-blue-300 transition duration-200 ${
-                window.location.pathname === '/expenses' ? 'bg-gray-700 text-blue-400 shadow-inner' : 'hover:bg-gray-700 hover:text-blue-300'
+                window.location.pathname === '/expense' ? 'bg-gray-700 text-blue-400 shadow-inner' : 'hover:bg-gray-700 hover:text-blue-300'
               }`}
               onClick={() => navigate('/expense')}
               title="View All Expenses"
