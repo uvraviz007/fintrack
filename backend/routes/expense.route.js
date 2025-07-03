@@ -70,8 +70,10 @@ router.get('/:groupId', jwtAuthMiddleware, async (req, res) => {
     }
 
     const expenses = await Expense.find({ group: groupId })
-      .sort({ createdAt: -1 }) // optional: latest first
-      
+      .populate('paidBy', 'username name') // Populate user info for paidBy
+      .populate('splitBetween', 'username name') // Populate user info for splitBetween
+      .populate('group', 'name') // Also populate group info
+      .sort({ createdAt: -1 }); // optional: latest first
 
     res.status(200).json(expenses);
   } catch (err) {
@@ -170,7 +172,11 @@ router.get("/member/:userId", async (req, res) => {
         { paidBy: userId },
         { splitBetween: userId } // ✅ match schema field
       ]
-    });
+    })
+    .populate('paidBy', 'username name') // Populate user info for paidBy
+    .populate('splitBetween', 'username name') // Populate user info for splitBetween
+    .populate('group', 'name') // Also populate group info
+    .sort({ createdAt: -1 }); // Sort by newest first
 
     res.status(200).json(expenses);
   } catch (error) {

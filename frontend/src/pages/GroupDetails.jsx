@@ -644,20 +644,17 @@ useEffect(() => {
                       <p className="text-sm text-gray-400 mt-1 flex items-center">
                         <FaUserPlus className="mr-1 text-xs" /> Paid by:{" "}
                         <span className="font-medium text-teal-300">
-                          {/* Find the member by ID to display username */}
-                          {groupMembers.find((m) => m._id === expense.paidBy)
-                            ?.username || "Unknown"}
+                          {/* Use populated user data directly */}
+                          {expense.paidBy?.username || "Unknown"}
                         </span>
                       </p>
                       <p className="text-xs text-gray-500 mt-1 flex items-center">
                         <FaCalendarAlt className="mr-1 text-xs" /> Date:{" "}
-                        {new Date(expense.date).toLocaleDateString("en-IN", {
+                        {new Date(expense.createdAt).toLocaleDateString("en-IN", {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
                         })}
-                        <FaClock className="ml-3 mr-1 text-xs" /> Time:{" "}
-                        {expense.time}
                       </p>
                       <p className="text-xs text-gray-400 mt-2">
                         Split between:{" "}
@@ -665,9 +662,7 @@ useEffect(() => {
                           {Array.isArray(expense.splitBetween) &&
                             expense.splitBetween
                               .map(
-                                (memberId) =>
-                                  groupMembers.find((m) => m._id === memberId)
-                                    ?.username || "Unknown"
+                                (member) => member?.username || "Unknown"
                               )
                               .join(", ")}
                         </span>

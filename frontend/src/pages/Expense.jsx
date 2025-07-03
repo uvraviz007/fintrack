@@ -51,9 +51,9 @@ function Expense() {
         // --- ADDED DEBUGGING LOG HERE ---
         console.log("Raw API Response Data:", response.data);
         response.data.forEach((exp, index) => {
-            console.log(`Expense ${index} date field:`, exp.date, `(Type: ${typeof exp.date})`);
-            if (!exp.date) {
-                console.warn(`WARNING: Expense ${index} has a missing/null/empty date field.`);
+            console.log(`Expense ${index} createdAt field:`, exp.createdAt, `(Type: ${typeof exp.createdAt})`);
+            if (!exp.createdAt) {
+                console.warn(`WARNING: Expense ${index} has a missing/null/empty createdAt field.`);
             }
         });
         // --- END DEBUGGING LOG ---
@@ -91,12 +91,12 @@ function Expense() {
       searchTerm
         ? expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
           expense.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (expense.paidBy && expense.paidBy.toLowerCase().includes(searchTerm.toLowerCase()))
+          (expense.paidBy?.username && expense.paidBy.username.toLowerCase().includes(searchTerm.toLowerCase()))
         : true
     )
     .sort((a, b) => {
-      const dateA = expenseDateToMs(a.date);
-      const dateB = expenseDateToMs(b.date);
+      const dateA = expenseDateToMs(a.createdAt);
+      const dateB = expenseDateToMs(b.createdAt);
       if (sortOption === 'date') {
         return dateB - dateA;
       } else if (sortOption === 'amount') {
@@ -190,18 +190,18 @@ function Expense() {
           {!loading && !error && filteredExpenses.length > 0 ? (
             <ul className="space-y-4">
               {filteredExpenses.map((expense) => {
-                const averageAmount = (expense.members && expense.members.length > 0)
-                  ? (expense.amount / expense.members.length).toFixed(2)
+                const averageAmount = (expense.splitBetween && expense.splitBetween.length > 0)
+                  ? (expense.amount / expense.splitBetween.length).toFixed(2)
                   : expense.amount.toFixed(2);
 
-                const expenseDate = expense.date ? parseISO(expense.date) : null;
+                const expenseDate = expense.createdAt ? parseISO(expense.createdAt) : null;
                 const formattedDate = expenseDate && isValid(expenseDate)
-                  ? format(expenseDate, 'MMM d,PPPP') // 'PPPP' gives "Jul 2, 2025"
+                  ? format(expenseDate, 'MMM d, yyyy') // Changed format to be more readable
                   : 'Invalid Date (Check Data)'; // More descriptive fallback
 
                 // --- ADDED DEBUGGING LOG HERE ---
                 if (formattedDate === 'Invalid Date (Check Data)') {
-                    console.error(`DEBUG: Expense ID ${expense._id} has invalid date string: "${expense.date}"`);
+                    console.error(`DEBUG: Expense ID ${expense._id} has invalid createdAt string: "${expense.createdAt}"`);
                 }
                 // --- END DEBUGGING LOG ---
 
@@ -218,11 +218,11 @@ function Expense() {
                         <span className="font-medium text-yellow-300">Category:</span> {expense.category}
                       </p>
                       <p className="text-sm text-gray-300">
-                        <span className="font-medium text-green-300">Paid by:</span> {expense.paidBy}
+                        <span className="font-medium text-green-300">Paid by:</span> {expense.paidBy?.username || expense.paidBy || 'Unknown'}
                       </p>
-                      {expense.members && expense.members.length > 0 && (
+                      {expense.splitBetween && expense.splitBetween.length > 0 && (
                         <p className="text-xs text-gray-400 mt-1">
-                            Members involved: {expense.members.length}
+                            Members involved: {expense.splitBetween.length}
                         </p>
                       )}
                       <p className="text-xs text-gray-400 mt-2">
@@ -231,7 +231,7 @@ function Expense() {
                     </div>
                     <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
                       <p className="text-2xl font-bold text-red-400 mr-4">
-                        ₹{averageAmount} {expense.members && expense.members.length > 0 && `(per person)`}
+                        ₹{averageAmount} {expense.splitBetween && expense.splitBetween.length > 0 && `(per person)`}
                       </p>
                     </div>
                   </li>
