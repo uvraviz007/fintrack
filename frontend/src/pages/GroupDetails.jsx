@@ -639,7 +639,7 @@ useEffect(() => {
                         {expense.description}
                       </h4>
                       <p className="text-sm text-gray-300 mt-1 flex items-center">
-                        <FaTag className="mr-1 text-xs" /> {expense.category}
+                        <FaTag className="mr-1 text-xs" /> {expense.category || 'Others'}
                       </p>
                       <p className="text-sm text-gray-400 mt-1 flex items-center">
                         <FaUserPlus className="mr-1 text-xs" /> Paid by:{" "}

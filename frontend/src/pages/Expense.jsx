@@ -86,11 +86,11 @@ function Expense() {
   }
 
   const filteredExpenses = expenses
-    .filter((expense) => (filter ? expense.category === filter : true))
+    .filter((expense) => (filter ? (expense.category || 'Others') === filter : true))
     .filter((expense) =>
       searchTerm
         ? expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          expense.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (expense.category || 'Others').toLowerCase().includes(searchTerm.toLowerCase()) ||
           (expense.paidBy?.username && expense.paidBy.username.toLowerCase().includes(searchTerm.toLowerCase()))
         : true
     )
@@ -215,7 +215,7 @@ function Expense() {
                         {expense.description}
                       </h3>
                       <p className="text-sm text-gray-300">
-                        <span className="font-medium text-yellow-300">Category:</span> {expense.category}
+                        <span className="font-medium text-yellow-300">Category:</span> {expense.category || 'Others'}
                       </p>
                       <p className="text-sm text-gray-300">
                         <span className="font-medium text-green-300">Paid by:</span> {expense.paidBy?.username || expense.paidBy || 'Unknown'}

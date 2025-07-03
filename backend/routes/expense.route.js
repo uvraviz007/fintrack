@@ -75,7 +75,13 @@ router.get('/:groupId', jwtAuthMiddleware, async (req, res) => {
       .populate('group', 'name') // Also populate group info
       .sort({ createdAt: -1 }); // optional: latest first
 
-    res.status(200).json(expenses);
+    // Add default category for expenses that don't have one
+    const expensesWithDefaultCategory = expenses.map(expense => ({
+      ...expense.toObject(),
+      category: expense.category || 'Others'
+    }));
+
+    res.status(200).json(expensesWithDefaultCategory);
   } catch (err) {
     console.error('Error fetching group expenses:', err);
     res.status(500).json({ message: 'Server error while fetching expenses' });
@@ -178,7 +184,13 @@ router.get("/member/:userId", async (req, res) => {
     .populate('group', 'name') // Also populate group info
     .sort({ createdAt: -1 }); // Sort by newest first
 
-    res.status(200).json(expenses);
+    // Add default category for expenses that don't have one
+    const expensesWithDefaultCategory = expenses.map(expense => ({
+      ...expense.toObject(),
+      category: expense.category || 'Others'
+    }));
+
+    res.status(200).json(expensesWithDefaultCategory);
   } catch (error) {
     console.error("❌ Error fetching user's expenses:", error);
     res.status(500).json({ error: "Server error while fetching expenses" });
