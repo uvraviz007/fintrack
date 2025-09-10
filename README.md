@@ -125,5 +125,5 @@ This project is licensed under the MIT License.
 ## Contact
 
 **Ravi Sharma**  
-📧 your-email@example.com  
-🌐 [LinkedIn](https://linkedin.com/in/yourprofile) | [GitHub](https://github.com/yourusername)
+📧 ravi.sharma172126@gmail.com  
+🌐 [LinkedIn](https://www.linkedin.com/in/ravi-sharma-6b5b42235/) | [GitHub](https://github.com/uvraviz007)
